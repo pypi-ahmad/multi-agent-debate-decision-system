@@ -28,3 +28,5 @@ coverage.xml
 
 # Local debate history
 data/debates/*.json
+data/decisions.db
+data/decisions.db-*

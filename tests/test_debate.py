@@ -97,7 +97,7 @@ def test_initial_state_and_routing() -> None:
     assert state["speeches_done"] == 0
     assert max_speeches(state) == 4
     assert should_judge(state) is False
-    assert route_after_moderator(state) == "debater"
+    assert route_after_moderator(state) == "tools"
     assert next_speaker_index(state) == 0
 
     state["speeches_done"] = 4
@@ -222,6 +222,10 @@ def test_advance_inject_export(monkeypatch) -> None:
         "debate_decision_system.agents.judge.get_chat_model",
         lambda *_a, **_k: _FakeJudge("unused"),
     )
+    monkeypatch.setattr(
+        "debate_decision_system.tools.get_chat_model",
+        lambda *_a, **_k: _FakeChat("[]"),
+    )
     stepped = advance(state)
     assert stepped["transcript"][-1]["role"] == "moderator"
     with_human = inject_human(stepped, "Consider cost.")
@@ -260,6 +264,7 @@ class _FakeStructured:
 
 
 def test_phase3_local_retrieve_history(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("debate_decision_system.history.DB_PATH", tmp_path / "decisions.db")
     monkeypatch.setattr("debate_decision_system.history.HISTORY_DIR", tmp_path)
     docs = [{"name": "note.md", "text": "ship the smallest slice this quarter"}]
     state = initial_state(
