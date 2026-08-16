@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Debate Decision System",
+    "subtitle": "Local Streamlit hearing — stepper, SQLite, LanceDB",
+    "output": "debate-hearing.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/pypi-ahmad/multi-agent-debate-decision-system",
+      "revision": "595bb2e57f96b699dbb268f6401c56326da22764"
+    },
+    "views": [
+      {
+        "id": "main-hearing",
+        "label": "Main hearing path",
+        "focus": ["operator", "streamlit", "hearing", "sqlite"],
+        "note": "Operator steps a hearing in the browser; state persists in SQLite."
+      },
+      {
+        "id": "models",
+        "label": "Model adapters",
+        "focus": ["hearing", "ollama", "hosted"],
+        "note": "Chat goes through get_chat_model to local Ollama or locked hosted slugs."
+      },
+      {
+        "id": "knowledge",
+        "label": "Knowledge stores",
+        "focus": ["hearing", "lancedb", "openweb"],
+        "note": "RAG uses LanceDB; open grounding may call Wikipedia or DuckDuckGo."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "cols": 4,
+    "gapX": 72,
+    "gapY": 80
+  },
+  "components": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator",
+      "sublabel": "Local browser",
+      "row": 1,
+      "col": 0,
+      "sources": [{ "path": "run.cmd" }, { "path": "run.sh" }]
+    },
+    {
+      "id": "streamlit",
+      "type": "frontend",
+      "label": "Streamlit UI",
+      "sublabel": "port 8522",
+      "row": 1,
+      "col": 1,
+      "sources": [{ "path": "app.py", "line": 14 }]
+    },
+    {
+      "id": "hearing",
+      "type": "backend",
+      "label": "Hearing kernel",
+      "sublabel": "advance()",
+      "tag": "not invoke",
+      "row": 1,
+      "col": 2,
+      "sources": [{ "path": "src/debate_decision_system/graph.py", "line": 244, "label": "advance" }]
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "SQLite",
+      "sublabel": "decisions.db",
+      "row": 1,
+      "col": 3,
+      "sources": [{ "path": "src/debate_decision_system/memory.py", "line": 19 }]
+    },
+    {
+      "id": "ollama",
+      "type": "external",
+      "label": "Ollama",
+      "sublabel": ":11434",
+      "row": 0,
+      "col": 2,
+      "sources": [{ "path": "src/debate_decision_system/config.py" }]
+    },
+    {
+      "id": "hosted",
+      "type": "external",
+      "label": "Hosted LLMs",
+      "sublabel": "OpenAI · Agnes · Gemini",
+      "row": 0,
+      "col": 3,
+      "sources": [{ "path": "src/debate_decision_system/llm.py", "line": 82 }]
+    },
+    {
+      "id": "lancedb",
+      "type": "database",
+      "label": "LanceDB",
+      "sublabel": "hybrid RAG",
+      "row": 2,
+      "col": 2,
+      "sources": [{ "path": "src/debate_decision_system/rag/pipeline.py" }]
+    },
+    {
+      "id": "openweb",
+      "type": "external",
+      "label": "Open web",
+      "sublabel": "Wiki · DDG",
+      "row": 2,
+      "col": 3,
+      "sources": [{ "path": "src/debate_decision_system/tools.py" }]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "This machine",
+      "wraps": ["streamlit", "hearing", "sqlite", "lancedb"]
+    }
+  ],
+  "connections": [
+    { "id": "op-ui", "from": "operator", "to": "streamlit", "variant": "emphasis" },
+    { "id": "ui-kernel", "from": "streamlit", "to": "hearing", "label": "advance" },
+    { "id": "kernel-sql", "from": "hearing", "to": "sqlite" },
+    { "id": "kernel-ollama", "from": "hearing", "to": "ollama" },
+    { "id": "kernel-hosted", "from": "hearing", "to": "hosted" },
+    { "id": "kernel-rag", "from": "hearing", "to": "lancedb" },
+    { "id": "kernel-web", "from": "hearing", "to": "openweb", "label": "open only", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Control",
+      "items": ["Streamlit pages call advance, not graph.invoke", "Native run.cmd / run.sh own repo-root .venv"]
+    },
+    {
+      "dot": "emerald",
+      "title": "Memory",
+      "items": ["SQLite stores full DebateState JSON", "LanceDB holds hybrid RAG chunks"]
+    },
+    {
+      "dot": "amber",
+      "title": "Models",
+      "items": ["Ollama lists local tags", "Hosted slugs locked; OS env keys win"]
+    }
+  ]
+}

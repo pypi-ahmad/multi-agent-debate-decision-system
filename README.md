@@ -232,3 +232,5 @@ uv run pytest
 CI on `push` to `main` and every PR: frozen `uv sync`, Ruff, ty, pytest, pip-audit, prek.
 
 Add runtime deps with `uv add <package>`. Do not edit dependency lists in `pyproject.toml` by hand. Nodes use fake chat clients in tests. There is no live-LLM e2e suite.
+
+<p align="center">Made with ❤️ by Ahmad Mujtaba</p>
