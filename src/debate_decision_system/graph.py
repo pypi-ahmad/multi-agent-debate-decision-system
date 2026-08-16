@@ -9,6 +9,7 @@ from typing import Any, cast
 from langgraph.graph import END, START, StateGraph
 
 from debate_decision_system.agents.debater import debater_node
+from debate_decision_system.agents.huddle import huddle_node
 from debate_decision_system.agents.judge import judge_node
 from debate_decision_system.agents.moderator import moderator_node, should_judge
 from debate_decision_system.agents.structure import options_node, pros_cons_node
@@ -20,13 +21,15 @@ from debate_decision_system.config import (
 )
 from debate_decision_system.personas import assign_personas, select_personas
 from debate_decision_system.state import DebaterSpec, DebateState, Document, Provider
+from debate_decision_system.teams import is_team
+from debate_decision_system.tools import tools_node
 
 
 def route_after_moderator(state: DebateState) -> str:
     """Moderator either gives the floor or closes the hearing."""
     if state.get("phase") == "judge" or should_judge(state):
         return "judge"
-    return "debater"
+    return "tools"
 
 
 def route_start(state: DebateState) -> str:
@@ -40,12 +43,16 @@ def build_graph() -> Any:  # noqa: ANN401
     graph.add_node("options", options_node)
     graph.add_node("pros_cons", pros_cons_node)
     graph.add_node("moderator", moderator_node)
+    graph.add_node("tools", tools_node)
+    graph.add_node("huddle", huddle_node)
     graph.add_node("debater", debater_node)
     graph.add_node("judge", judge_node)
     graph.add_conditional_edges(START, route_start, ["options", "moderator"])
     graph.add_edge("options", "pros_cons")
     graph.add_edge("pros_cons", "moderator")
-    graph.add_conditional_edges("moderator", route_after_moderator, ["debater", "judge"])
+    graph.add_conditional_edges("moderator", route_after_moderator, ["tools", "judge"])
+    graph.add_edge("tools", "huddle")
+    graph.add_edge("huddle", "debater")
     graph.add_edge("debater", "moderator")
     graph.add_edge("judge", END)
     return graph.compile()
@@ -72,6 +79,8 @@ def initial_state(  # noqa: PLR0913
     mode: str = "open",
     local_only: bool = False,
     documents: list[Document] | None = None,
+    grounding: str = "open",
+    seats: list[DebaterSpec] | None = None,
 ) -> DebateState:
     if provider not in {"Ollama", "OpenAI", "Agnes AI", "Google"}:
         msg = f"Unknown provider: {provider}"
@@ -82,30 +91,21 @@ def initial_state(  # noqa: PLR0913
     if mode not in {"open", "structured"}:
         msg = f"Unknown mode: {mode}"
         raise ValueError(msg)
+    if grounding not in {"open", "grounded"}:
+        msg = f"Unknown grounding: {grounding}"
+        raise ValueError(msg)
     if local_only:
         provider = "Ollama"
         moderator_provider = "Ollama"
         judge_provider = "Ollama"
         if seat_models:
             seat_models = [("Ollama", model or seat[1]) for seat in seat_models]
-    picked = select_personas(persona_names) if persona_names else []
-    if len(picked) < MIN_DEBATERS:
-        picked = assign_personas(debater_count)
-    debaters: list[DebaterSpec] = []
-    for i, persona in enumerate(picked):
-        if seat_models and i < len(seat_models):
-            seat_provider, seat_model = seat_models[i]
-        else:
-            seat_provider, seat_model = provider, model
-        debaters.append(
-            {
-                "name": persona.name,
-                "style": persona.style,
-                "instructions": persona.instructions,
-                "provider": cast(Provider, seat_provider),
-                "model": seat_model,
-            }
-        )
+    if seats:
+        debaters = [_normalize_seat(seat, provider, model, local_only=local_only) for seat in seats]
+        if len(debaters) < MIN_DEBATERS:
+            debaters = _agent_seats(debater_count, provider, model, persona_names, seat_models)
+    else:
+        debaters = _agent_seats(debater_count, provider, model, persona_names, seat_models)
     mod_provider = moderator_provider or provider
     judg_provider = judge_provider or provider
     phase = "options" if mode == "structured" else "debate"
@@ -124,6 +124,10 @@ def initial_state(  # noqa: PLR0913
             "temperature": temperature,
             "speaking_order": speaking_order,
             "local_only": local_only,
+            "grounding": grounding,
+            "awaiting_speech": False,
+            "huddle_done": False,
+            "huddle_index": 0,
             "max_rounds": max_rounds,
             "debaters": debaters,
             "next_speaker": 0,
@@ -137,6 +141,56 @@ def initial_state(  # noqa: PLR0913
             "errors": [],
         },
     )
+
+
+def _agent_seats(
+    debater_count: int,
+    provider: str,
+    model: str,
+    persona_names: list[str] | None,
+    seat_models: list[tuple[str, str]] | None,
+) -> list[DebaterSpec]:
+    picked = select_personas(persona_names) if persona_names else []
+    if len(picked) < MIN_DEBATERS:
+        picked = assign_personas(debater_count)
+    seats: list[DebaterSpec] = []
+    for i, persona in enumerate(picked):
+        if seat_models and i < len(seat_models):
+            seat_provider, seat_model = seat_models[i]
+        else:
+            seat_provider, seat_model = provider, model
+        seats.append(
+            {
+                "name": persona.name,
+                "style": persona.style,
+                "instructions": persona.instructions,
+                "provider": cast(Provider, seat_provider),
+                "model": seat_model,
+                "kind": "agent",
+                "members": [],
+            }
+        )
+    return seats
+
+
+def _normalize_seat(
+    seat: DebaterSpec, provider: str, model: str, *, local_only: bool
+) -> DebaterSpec:
+    kind = seat.get("kind") or "agent"
+    members = list(seat.get("members") or [])
+    if local_only:
+        for member in members:
+            member["provider"] = "Ollama"
+            member["model"] = model or member.get("model") or ""
+    return {
+        "name": seat.get("name", "Seat"),
+        "style": seat.get("style", ""),
+        "instructions": seat.get("instructions", ""),
+        "provider": "Ollama" if local_only else cast(Provider, seat.get("provider") or provider),
+        "model": seat.get("model") or model,
+        "kind": kind,
+        "members": members,
+    }
 
 
 def apply_update(state: DebateState, update: dict[str, Any]) -> DebateState:
@@ -170,14 +224,20 @@ def next_action(state: DebateState) -> str:  # noqa: PLR0911
     turns = state.get("transcript") or []
     if should_judge(state) or not turns or turns[-1]["role"] in {"debater", "human"}:
         return "moderator"
+    seat = state["debaters"][int(state.get("next_speaker", 0))]
+    need_huddle = is_team(seat) and not state.get("huddle_done")
+    if state.get("awaiting_speech") or (turns and turns[-1]["role"] in {"tool", "huddle"}):
+        if need_huddle:
+            return "huddle"
+        return "debater"
     if turns[-1]["role"] == "moderator":
         if turns[-1]["name"] == "Analyst":
             return "moderator"
-        return "debater"
+        return "tools"
     return "end"
 
 
-def advance(state: DebateState) -> DebateState:
+def advance(state: DebateState) -> DebateState:  # noqa: PLR0911
     action = next_action(state)
     if action == "options":
         return apply_update(state, options_node(state))
@@ -185,6 +245,10 @@ def advance(state: DebateState) -> DebateState:
         return apply_update(state, pros_cons_node(state))
     if action == "moderator":
         return apply_update(state, moderator_node(state))
+    if action == "tools":
+        return apply_update(state, tools_node(state))
+    if action == "huddle":
+        return apply_update(state, huddle_node(state))
     if action == "debater":
         return apply_update(state, debater_node(state))
     if action == "judge":

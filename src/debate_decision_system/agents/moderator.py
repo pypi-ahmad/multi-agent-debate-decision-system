@@ -29,7 +29,10 @@ def next_speaker_index(state: DebateState) -> int:
 
 
 def _roster(debaters: list[DebaterSpec]) -> str:
-    return ", ".join(f"{d['name']} ({d['style']})" for d in debaters)
+    return ", ".join(
+        f"{d['name']} (team)" if d.get("kind") == "team" else f"{d['name']} ({d['style']})"
+        for d in debaters
+    )
 
 
 def moderator_node(state: DebateState) -> dict:

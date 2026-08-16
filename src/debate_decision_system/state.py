@@ -10,13 +10,23 @@ Provider = Literal["Ollama", "OpenAI", "Agnes AI", "Google"]
 Phase = Literal["options", "pros_cons", "debate", "judge"]
 SpeakingOrder = Literal["sequential", "reverse", "random"]
 DebateMode = Literal["open", "structured"]
+Grounding = Literal["open", "grounded"]
 Outcome = Literal["clear_winner", "consensus", "split"]
 
 
 class Turn(TypedDict):
-    role: Literal["moderator", "debater", "judge", "human"]
+    role: Literal["moderator", "debater", "judge", "human", "tool", "huddle"]
     name: str
     content: str
+
+
+class TeamMember(TypedDict, total=False):
+    name: str
+    style: str
+    instructions: str
+    provider: Provider
+    model: str
+    is_leader: bool
 
 
 class DebaterSpec(TypedDict, total=False):
@@ -25,6 +35,8 @@ class DebaterSpec(TypedDict, total=False):
     instructions: str
     provider: Provider
     model: str
+    kind: Literal["agent", "team"]
+    members: list[TeamMember]
 
 
 class SpeechScore(TypedDict):
@@ -64,6 +76,11 @@ class DebateState(TypedDict, total=False):
     temperature: float
     speaking_order: SpeakingOrder
     local_only: bool
+    grounding: Grounding
+    batch_id: str
+    awaiting_speech: bool
+    huddle_done: bool
+    huddle_index: int
     max_rounds: int
     debaters: list[DebaterSpec]
     next_speaker: int
