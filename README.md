@@ -10,122 +10,58 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-d7ff64?style=flat-square)](https://docs.astral.sh/ruff/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-**Repository:** [https://github.com/pypi-ahmad/multi-agent-debate-decision-system](https://github.com/pypi-ahmad/multi-agent-debate-decision-system)
+[Features](#features) · [Getting started](#getting-started) · [Usage](#usage) · [How to use](docs/how-to-use.md)
+
+</div>
+
+You type a decision question. The app seats personas or **teams**, a **moderator** gives the floor, optional **tools** and **LanceDB RAG** can ground speeches, and a **judge** returns an outcome (`clear_winner` / `consensus` / `split`), a recommendation, confidence, risks, and scores.
+
+Streamlit on port **8522**: Debate, Decision history, Analytics, Knowledge. Package `debate-decision-system` `0.3.0`. Local SQLite + LanceDB. No hosted API, no auth.
 
 ```bash
 git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
 ```
 
-</div>
-
-## Index
-
-1. [What this is](#what-this-is)
-2. [Welcome](#welcome)
-3. [Disclaimer](#disclaimer)
-4. [Documentation](#documentation)
-5. [Features](#features)
-6. [Getting started](#getting-started)
-7. [Usage](#usage)
-8. [Architecture](#architecture)
-9. [Development](#development)
-10. [Community](#community)
-
-## What this is
-
-You type a decision question (ship vs wait, pick a store, change a process). The app seats two or more agents — each a fixed reasoning style, or a **team** that huddles first. A **moderator** gives the floor. Optional **tools** (calculator, restricted math, docs, Wikipedia, web) and **LanceDB RAG** can ground the speeches. A **judge** returns an outcome (`clear_winner` / `consensus` / `split`), a recommendation, a confidence score, risks, and per-speech scores.
-
-The UI is Streamlit on port **8522**: Debate, Decision history, Analytics, Knowledge. The package name is `debate-decision-system` `0.3.0`. Persistence is local SQLite (`data/decisions.db`) plus LanceDB (`data/lancedb/`). There is no hosted API and no auth.
-
-The console script only prints the package identity. It does not start a debate.
-
-```bash
-uv run debate-decision-system
-# debate-decision-system 0.3.0
-```
-
 > [!TIP]
-> Start with [Ollama](https://ollama.com/) and turn on **Fully local** if you want a run with no API keys.
+> Start with [Ollama](https://ollama.com/) and **Fully local** if you want a run with no API keys.
 
 > [!NOTE]
-> The hearing is stepped by `advance()`, one node at a time, so you can pause, inject a human note, or ask for evidence. The UI never constructs a provider client.
+> Hearings step with `advance()`, one node at a time, so you can pause, inject a note, or ask for evidence. The UI never builds a provider client.
 
 ## Welcome
 
-Hello — thanks for being here.
+This project is **free** and community-driven. Clone it, run it, test it, file bugs, suggest features, send PRs. First-time contributors are welcome.
 
-This project is **free**, [MIT](LICENSE)-licensed, and **community-driven**. Clone it, run it, test it, file bugs, suggest features, send pull requests. First-time contributors are welcome. You do not need permission to open a thoughtful issue.
+**You run everything on your machine** with **your** Ollama models or **your** API keys.
 
-**You run everything on your own machine** with **your** Ollama models or **your** API keys. There is no hosted product, no account, and no backend operated by the author.
+**Please do not send money.** Donations and sponsorship are not needed or wanted.
 
-**Please do not send money.** Donations, sponsorship, and paid support are not needed and not wanted. Kind bug reports and honest PRs are the contribution that helps.
-
-| You want to… | Go here |
-| --- | --- |
-| Ask how to use it | [SUPPORT.md](SUPPORT.md) |
-| Report a bug | [Bug report](.github/ISSUE_TEMPLATE/bug_report.md) |
-| Suggest a feature | [Feature request](.github/ISSUE_TEMPLATE/feature_request.md) |
-| Contribute code | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Report a vulnerability | [SECURITY.md](SECURITY.md) |
-| Read the legal / data warning | [DISCLAIMER.md](DISCLAIMER.md) |
+How-to and help: [docs/how-to-use.md](docs/how-to-use.md) · [SUPPORT.md](SUPPORT.md)
 
 ## Disclaimer
 
 > [!CAUTION]
-> **All data processed by this app is 100% your responsibility.** That includes decision questions, transcripts, uploaded files, SQLite and LanceDB stores, and anything sent to Ollama, OpenAI, Agnes AI, Google, Wikipedia, or DuckDuckGo.
+> **All data processed by this app is 100% your responsibility** — questions, uploads, `data/decisions.db`, `data/lancedb/`, and anything sent to Ollama, OpenAI, Agnes AI, Google, Wikipedia, or DuckDuckGo.
 
-The software is provided **as is** under the MIT License. Outputs are generated text, not professional advice. The app has **no authentication** — do not expose port **8522** to the internet.
-
-Full text: [DISCLAIMER.md](DISCLAIMER.md).
-
-## Documentation
-
-| Doc | What it is |
-| --- | --- |
-| [docs/how-to-use.md](docs/how-to-use.md) | Recipes: first debate, hosted models, teams, grounding, RAG library, history, analytics |
-| [docs/technical.md](docs/technical.md) | Layers, providers, graph, tools, RAG, memory, analytics, quality gates |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Cited onboarding map of the checkout (stack, commands, C4, subsystems) |
-| [Project_Architecture_Blueprint.md](Project_Architecture_Blueprint.md) | Layers, ADRs, and how to add a node or provider |
-| [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md) | Leave-in-place plan; residual hardening only |
-| [AGENTS.md](AGENTS.md) | Agent tone and the no-Streamlit-launch rule |
-| [.github/copilot-instructions.md](.github/copilot-instructions.md) | Copilot auto-load (same caveman block) |
-| [.github/copilot-instructions.modernization.md](.github/copilot-instructions.modernization.md) | Commands and phase gates for the modernization plan |
-| [LICENSE](LICENSE) | MIT |
-| [DISCLAIMER.md](DISCLAIMER.md) | You own the data, the keys, and the risk; no donations |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up, test, and open a PR |
-| [SUPPORT.md](SUPPORT.md) | Usage help and common stuck points |
-| [SECURITY.md](SECURITY.md) | Private vulnerability reports |
-| [.github/ISSUE_TEMPLATE/bug_report.md](.github/ISSUE_TEMPLATE/bug_report.md) | Bug template |
-| [.github/ISSUE_TEMPLATE/feature_request.md](.github/ISSUE_TEMPLATE/feature_request.md) | Feature template |
-| [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) | PR checklist |
-| [pyproject.toml](pyproject.toml) | Package metadata, deps, Ruff / ty / pytest |
-| [.env.example](.env.example) | Env template for API keys and RAG embed settings |
-
-There is no `.github/copilot/` blueprint folder.
+Software is **as is**. Outputs are not professional advice. Do not expose port **8522**. Full text: [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Features
 
-- **Four pages** — Debate, Decision history, Analytics, Knowledge
-- **Decision report** — outcome, winner, recommendation, confidence, risks, argument scores
-- **Open or structured** — structured mode is options → pros/cons → debate → judge
-- **Teams** — Engineering, Product, Business, Security, Devil's Advocate; huddle then leader speaks
-- **Tools** — calculator, restricted math code, docs search; Wikipedia and DuckDuckGo in **open** knowledge mode
-- **Grounded mode** — documents + calculator/code only; speeches must cite `[source:…]`
-- **RAG** — LanceDB hybrid retrieve (dense + BM25), rerank, compression, citations; session vs long-term
-- **Memory** — every step writes SQLite; search, link, continue, export
-- **Analytics** — win rates, circular-speech flags, quality report, strength over time, multi-model simulation
+- Four pages: Debate, Decision history, Analytics, Knowledge
+- Decision report with outcome, winner, recommendation, confidence, risks, scores
+- Open or structured mode (options → pros/cons → hearing → judge)
+- Team seats: huddle privately, then the leader speaks
+- Tools: calculator, restricted math, docs; Wikipedia and DuckDuckGo in **open** mode
+- Grounded mode: documents + calculator/code only; speeches must cite `[source:…]`
+- LanceDB hybrid RAG (dense + BM25), rerank, citations
+- SQLite memory: search, link, continue, export
+- Analytics: win rates, circular-speech flags, quality, strength over time
 
 ## Getting started
 
-### Prerequisites
+**Need:** [uv](https://docs.astral.sh/uv/) 0.11+, Python 3.11+ (pin `3.13`), and either [Ollama](https://ollama.com/) or an API key.
 
-- [uv](https://docs.astral.sh/uv/) 0.11+
-- Python 3.11+ (`.python-version` is `3.13`)
-- A local [Ollama](https://ollama.com/) model, or an API key in `.env`
-
-### Install and run
-
-Native Windows (cmd / Explorer, not WSL or Docker) and native Linux. Same repo-root `.venv`.
+Native Windows (cmd / Explorer, not WSL or Docker) or native Linux. Same repo-root `.venv`.
 
 ```bash
 git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
@@ -134,55 +70,50 @@ cd multi-agent-debate-decision-system
 
 | OS | First run |
 | --- | --- |
-| Windows | Double-click `run.cmd`, or in cmd: `run.cmd` |
+| Windows | Double-click `run.cmd` |
 | Linux | `./run.sh` |
 
 Open [http://localhost:8522](http://localhost:8522).
 
-The launcher installs uv if missing (official installer), runs `uv python install` and `uv venv .venv` at the repo root, `uv sync`s into that env, copies `.env.example` → `.env` when needed, creates `data/debates` and `data/lancedb`, activates `.venv`, then starts Streamlit from inside it. Later launches reuse the same `.venv`.
-
-Manual path (either OS): `uv sync --all-groups`, then Windows `.venv\Scripts\streamlit.exe run app.py` or Linux `.venv/bin/streamlit run app.py`.
+The launcher installs uv if needed, creates `.venv`, syncs the lockfile, copies `.env.example` → `.env` when missing, makes `data/` dirs, then starts Streamlit from the venv.
 
 ### First debate (Ollama)
 
-1. `ollama pull llama3.1:8b` (or any local chat model)
-2. Optional RAG embeddings: `ollama pull nomic-embed-text`
-3. Start the app
-4. On **Debate**, turn **Fully local** on. Pick the Ollama model
-5. Mode `open`. Seats: 2 agents, 1 round
-6. Enter a decision question. Click **Start debate**
-
-You should see moderator and speaker turns, then a **Decision report**.
+1. `ollama pull llama3.1:8b` (any local chat model works)
+2. Optional: `ollama pull nomic-embed-text`
+3. Start the app → **Fully local** on → pick the model
+4. Mode `open`, 2 seats, 1 round
+5. Enter a question → **Start debate**
 
 > [!IMPORTANT]
-> Empty model list means Ollama is not reachable at `OLLAMA_BASE_URL` (default `http://localhost:11434`).
+> Empty model list means Ollama is not at `OLLAMA_BASE_URL` (default `http://localhost:11434`).
 
 ## Usage
 
 | Provider | Models | Env |
 | --- | --- | --- |
-| Ollama | tags from the local daemon | `OLLAMA_BASE_URL` (default `http://localhost:11434`) |
+| Ollama | tags from the local daemon | `OLLAMA_BASE_URL` |
 | OpenAI | `gpt-5.6-luna` (medium effort) | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` |
 | Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY` |
 | Google | `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` |
 
-Bounds in `config.py`: 2–8 seats, 1–6 rounds, 2–4 members per team, temperature 0.0–1.2.
+OS env wins over `.env`. Bounds: 2–8 seats, 1–6 rounds, 2–4 team members, temperature 0.0–1.2.
 
 | Job | How |
 | --- | --- |
-| Hosted model | Copy `.env.example` → `.env`, fill one key, turn **Fully local** off |
-| Structured decision | Mode `structured` (options → pros/cons → hearing) |
+| Hosted model | Fill one key in `.env`, turn **Fully local** off |
+| Structured | Mode `structured` |
 | Team seat | Type `team`, pick a template, mark a Leader |
 | Grounded docs | Knowledge `grounded`, upload `.pdf` / `.md` / `.py` / `.txt` / `.zip` |
-| Long-term RAG library | **Knowledge** page → index uploads → search test |
-| Pause / inject | Pause → **Inject** a note, or **Ask for evidence** |
-| Continue a past run | **Decision history** → search → **Continue debate** |
+| RAG library | **Knowledge** page → index → search test |
+| Pause / inject | Pause → **Inject**, or **Ask for evidence** |
+| Continue | **Decision history** → **Continue debate** |
 
-Full recipes: [docs/how-to-use.md](docs/how-to-use.md).
+More recipes: [docs/how-to-use.md](docs/how-to-use.md).
 
 ## Architecture
 
-`advance()` walks one node at a time so the UI can pause, inject, and huddle. The UI never talks to providers.
+`advance()` walks one node at a time. The UI never talks to providers.
 
 ```mermaid
 flowchart LR
@@ -199,65 +130,22 @@ flowchart LR
   Judge --> Report[Decision report]
 ```
 
-Individuals skip huddle. Teams huddle privately, then the leader speaks in public. `tools` may append `tool:rag` citation turns when RAG is on.
-
 ```text
-.
-├── app.py                         # st.navigation entry
-├── app_pages/                     # debate, history, analytics, knowledge
-├── run.cmd                        # native Windows launcher
-├── run.sh                         # native Linux launcher
-├── docs/
-├── src/debate_decision_system/
-│   ├── graph.py                   # advance / inject / seats
-│   ├── agents/                    # options, huddle, moderator, debater, judge
-│   ├── tools.py                   # calc, code, wiki, web, docs, RAG turns
-│   ├── teams.py                   # team templates
-│   ├── memory.py                  # SQLite decisions
-│   ├── rag/                       # LanceDB hybrid pipeline
-│   ├── analytics.py
-│   └── documents.py               # PDF / zip / text loaders
-├── tests/
-├── data/decisions.db              # local, gitignored
-├── data/lancedb/                  # local, gitignored
-└── Makefile
+app.py + app_pages/          Streamlit
+src/debate_decision_system/  graph, agents, tools, memory, RAG
+run.cmd / run.sh             native launchers
+data/                        SQLite + LanceDB (gitignored)
 ```
 
-Internals: [docs/technical.md](docs/technical.md). Cited map: [ARCHITECTURE.md](ARCHITECTURE.md).
+Internals: [docs/technical.md](docs/technical.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [Project_Architecture_Blueprint.md](Project_Architecture_Blueprint.md)
 
 ## Development
 
-| Layer | Choice |
-| --- | --- |
-| Language | Python `>=3.11` |
-| Package | [uv](https://docs.astral.sh/uv/) + `uv.lock` + `uv_build` |
-| Graph | LangGraph + LangChain adapters |
-| UI | Streamlit `>=1.61.1` on port **8522** |
-| Docs | `pypdf` |
-| Memory | SQLite at `data/decisions.db` |
-| Vectors | LanceDB at `data/lancedb/` |
-| Quality | Ruff, ty, pytest (fail under 80%), pip-audit, prek |
-
 ```bash
 make dev lint test audit
-uv tool install prek && prek install
 uv run pytest
 ```
 
-CI on `push` to `main` and every PR: frozen `uv sync`, Ruff, ty, pytest, pip-audit, prek.
-
-Add runtime deps with `uv add <package>`. Do not edit dependency lists in `pyproject.toml` by hand. Nodes use fake chat clients in tests. There is no live-LLM e2e suite.
-
-## Community
-
-Clone, use, test, report, and contribute. That is the whole loop.
-
-1. Fork [the repo](https://github.com/pypi-ahmad/multi-agent-debate-decision-system) and branch from `main`.
-2. Run `make lint` and `make test` before you open a PR.
-3. Use the [pull request template](.github/PULL_REQUEST_TEMPLATE.md).
-
-Be kind. Assume good faith. The maintainer is a volunteer.
-
-Please do **not** open issues about donations, sponsorship, or “how can I pay you.” There is nothing to pay.
+CI on `push`/`PR` to `main`: frozen `uv sync`, Ruff, ty, pytest (cov ≥ 80%), pip-audit, prek. Add deps with `uv add`. Tests use fake chat clients.
 
 <p align="center">Made with ❤️ by Ahmad Mujtaba</p>
