@@ -81,7 +81,7 @@ def _pick_provider_model(
 def _providers_missing(providers: set[str]) -> str | None:
     for item in providers:
         key = config.required_key(item)
-        if key and not getattr(config, key, ""):
+        if key and not config.key_present(item):
             return key
     return None
 
@@ -166,9 +166,11 @@ with st.sidebar:
             st.selectbox("Default model", default_options, key="model") if default_options else ""
         )
     if default_provider == "OpenAI":
-        st.caption("Effort is fixed at medium for gpt-5.6-luna and gpt-5.6-terra.")
+        st.caption("gpt-5.6-luna. Reasoning effort fixed at medium.")
     if default_provider == "Agnes AI":
         st.caption("Fixed model: agnes-2.5-flash")
+    if default_provider == "Google":
+        st.caption("gemini-3.5-flash-lite or gemini-3.7-flash.")
 
     mode = st.segmented_control(
         "Mode",

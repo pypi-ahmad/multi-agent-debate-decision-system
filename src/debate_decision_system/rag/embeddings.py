@@ -11,7 +11,6 @@ import urllib.request
 from urllib.parse import urlparse
 
 from debate_decision_system import config
-from debate_decision_system.config import OLLAMA_BASE_URL
 
 HASH_DIM = 256
 
@@ -47,7 +46,7 @@ def cosine(left: list[float], right: list[float]) -> float:
 
 
 def _ollama_embed(text: str, model: str) -> list[float] | None:
-    root = OLLAMA_BASE_URL.rstrip("/")
+    root = config.ollama_base_url().rstrip("/")
     parsed = urlparse(root)
     if parsed.scheme not in {"http", "https"}:
         return None

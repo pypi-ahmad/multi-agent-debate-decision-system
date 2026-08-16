@@ -34,58 +34,66 @@ def message_text(message: BaseMessage) -> str:
     return str(content).strip()
 
 
+def _require_key(value: str, name: str) -> str:
+    if not value:
+        missing = f"{name} is not set. See .env.example."
+        raise RuntimeError(missing)
+    return value
+
+
+def _openai_chat(model: str, temperature: float) -> BaseChatModel:
+    if model not in config.OPENAI_MODELS:
+        msg = f"OpenAI model must be one of {config.OPENAI_MODELS}, got {model!r}"
+        raise ValueError(msg)
+    return ChatOpenAI(
+        model=model,
+        api_key=_require_key(config.openai_api_key(), "OPENAI_API_KEY"),
+        base_url=config.openai_base_url(),
+        temperature=temperature,
+        timeout=config.REASONING_TIMEOUT_SECONDS,
+        reasoning={"effort": config.OPENAI_REASONING_EFFORT},
+    )
+
+
+def _agnes_chat(temperature: float) -> BaseChatModel:
+    return ChatOpenAI(
+        model=config.AGNES_MODEL,
+        api_key=_require_key(config.agnes_api_key(), "AGNES_API_KEY"),
+        base_url=config.agnes_base_url(),
+        temperature=temperature,
+        timeout=config.REASONING_TIMEOUT_SECONDS,
+    )
+
+
+def _google_chat(model: str, temperature: float) -> BaseChatModel:
+    if model not in config.GOOGLE_MODELS:
+        msg = f"Google model must be one of {config.GOOGLE_MODELS}, got {model!r}"
+        raise ValueError(msg)
+    kwargs: dict[str, Any] = {
+        "model": model,
+        "google_api_key": _require_key(config.google_api_key(), "GOOGLE_API_KEY"),
+        "timeout": config.REASONING_TIMEOUT_SECONDS,
+    }
+    if model not in config.GOOGLE_NO_SAMPLING:
+        kwargs["temperature"] = temperature
+    return ChatGoogleGenerativeAI(**kwargs)
+
+
 def get_chat_model(provider: str, model: str, temperature: float = 0.4) -> BaseChatModel:
     """Build the chat client for one debate run."""
     if provider == "Ollama":
         return ChatOllama(
             model=model,
-            base_url=config.OLLAMA_BASE_URL,
+            base_url=config.ollama_base_url(),
             temperature=temperature,
             client_kwargs={"timeout": config.OLLAMA_TIMEOUT_SECONDS},
         )
-
     if provider == "OpenAI":
-        if model not in config.OPENAI_MODELS:
-            msg = f"OpenAI model must be one of {config.OPENAI_MODELS}, got {model!r}"
-            raise ValueError(msg)
-        if not config.OPENAI_API_KEY:
-            missing = "OPENAI_API_KEY is not set. See .env.example."
-            raise RuntimeError(missing)
-        return ChatOpenAI(
-            model=model,
-            api_key=config.OPENAI_API_KEY,
-            base_url=config.OPENAI_BASE_URL,
-            temperature=temperature,
-            timeout=config.REASONING_TIMEOUT_SECONDS,
-            reasoning={"effort": config.OPENAI_REASONING_EFFORT},
-        )
-
+        return _openai_chat(model, temperature)
     if provider == "Agnes AI":
-        if not config.AGNES_API_KEY:
-            missing = "AGNES_API_KEY is not set. See .env.example."
-            raise RuntimeError(missing)
-        return ChatOpenAI(
-            model=config.AGNES_MODEL,
-            api_key=config.AGNES_API_KEY,
-            base_url=config.AGNES_BASE_URL,
-            temperature=temperature,
-            timeout=config.REASONING_TIMEOUT_SECONDS,
-        )
-
+        return _agnes_chat(temperature)
     if provider == "Google":
-        if model not in config.GOOGLE_MODELS:
-            msg = f"Google model must be one of {config.GOOGLE_MODELS}, got {model!r}"
-            raise ValueError(msg)
-        if not config.GOOGLE_API_KEY:
-            missing = "GOOGLE_API_KEY is not set. See .env.example."
-            raise RuntimeError(missing)
-        return ChatGoogleGenerativeAI(
-            model=model,
-            google_api_key=config.GOOGLE_API_KEY,
-            temperature=temperature,
-            timeout=config.REASONING_TIMEOUT_SECONDS,
-        )
-
+        return _google_chat(model, temperature)
     msg = f"Unknown provider: {provider}"
     raise ValueError(msg)
 

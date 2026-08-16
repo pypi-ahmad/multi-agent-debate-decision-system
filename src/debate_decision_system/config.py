@@ -13,23 +13,62 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-load_dotenv(PROJECT_ROOT / ".env")
+# OS / user env wins. .env fills only missing keys (for other machines).
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-OPENAI_MODELS = ("gpt-5.6-luna", "gpt-5.6-terra")
+DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
+DEFAULT_AGNES_BASE_URL = "https://apihub.agnes-ai.com/v1"
+DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
+
+# Official slugs: OpenAI latest-model.md, Agnes Flash docs, Gemini models list.
+OPENAI_MODELS = ("gpt-5.6-luna",)
 OPENAI_REASONING_EFFORT = "medium"
-
-AGNES_API_KEY = os.environ.get("AGNES_API_KEY", "")
-AGNES_BASE_URL = os.environ.get("AGNES_BASE_URL", "https://apihub.agnes-ai.com/v1")
 AGNES_MODEL = "agnes-2.5-flash"
-
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 GOOGLE_MODELS = ("gemini-3.5-flash-lite", "gemini-3.7-flash")
+# Gemini 3.7 Flash migration: strip temperature / top_p / top_k.
+GOOGLE_NO_SAMPLING = frozenset({"gemini-3.7-flash"})
 
-OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-RAG_EMBED_MODEL = os.environ.get("RAG_EMBED_MODEL", "nomic-embed-text")
-RAG_EMBED_BACKEND = os.environ.get("RAG_EMBED_BACKEND", "auto")
+
+def env(name: str, default: str = "") -> str:
+    """Read a live process env var. Empty string if unset."""
+    return os.environ.get(name, default).strip()
+
+
+def openai_api_key() -> str:
+    return env("OPENAI_API_KEY")
+
+
+def openai_base_url() -> str:
+    return env("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL) or DEFAULT_OPENAI_BASE_URL
+
+
+def agnes_api_key() -> str:
+    return env("AGNES_API_KEY")
+
+
+def agnes_base_url() -> str:
+    return env("AGNES_BASE_URL", DEFAULT_AGNES_BASE_URL) or DEFAULT_AGNES_BASE_URL
+
+
+def google_api_key() -> str:
+    return env("GOOGLE_API_KEY")
+
+
+def ollama_base_url() -> str:
+    return env("OLLAMA_BASE_URL", DEFAULT_OLLAMA_BASE_URL) or DEFAULT_OLLAMA_BASE_URL
+
+
+# Names kept so getattr(config, "OPENAI_API_KEY") still works if something
+# imported the old snapshot. Prefer the functions above at call time.
+OPENAI_API_KEY = openai_api_key()
+OPENAI_BASE_URL = openai_base_url()
+AGNES_API_KEY = agnes_api_key()
+AGNES_BASE_URL = agnes_base_url()
+GOOGLE_API_KEY = google_api_key()
+OLLAMA_BASE_URL = ollama_base_url()
+
+RAG_EMBED_MODEL = env("RAG_EMBED_MODEL", "nomic-embed-text") or "nomic-embed-text"
+RAG_EMBED_BACKEND = env("RAG_EMBED_BACKEND", "auto") or "auto"
 
 PROVIDERS = ("Ollama", "OpenAI", "Agnes AI", "Google")
 
@@ -73,9 +112,15 @@ def required_key(provider: str) -> str | None:
     return None
 
 
+def key_present(provider: str) -> bool:
+    """True when the provider needs no key or the live env var is set."""
+    name = required_key(provider)
+    return name is None or bool(env(name))
+
+
 def list_ollama_models(base_url: str | None = None) -> list[str]:
-    """Ask the local Ollama daemon which models are pulled."""
-    root = (base_url or OLLAMA_BASE_URL).rstrip("/")
+    """Ask the local Ollama daemon which models are pulled. GET /api/tags."""
+    root = (base_url or ollama_base_url()).rstrip("/")
     parsed = urlparse(root)
     if parsed.scheme not in {"http", "https"}:
         return []
@@ -86,8 +131,11 @@ def list_ollama_models(base_url: str | None = None) -> list[str]:
     except (OSError, urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError):
         return []
     names: list[str] = []
+    seen: set[str] = set()
     for item in payload.get("models", []):
         name = item.get("name") or item.get("model")
-        if isinstance(name, str) and name:
+        if isinstance(name, str) and name and name not in seen:
+            seen.add(name)
             names.append(name)
+    names.sort()
     return names

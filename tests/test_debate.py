@@ -50,6 +50,7 @@ def test_assign_personas_clamps_and_is_distinct() -> None:
 
 
 def test_provider_catalogs() -> None:
+    assert OPENAI_MODELS == ("gpt-5.6-luna",)
     assert models_for_provider("OpenAI") == OPENAI_MODELS
     assert models_for_provider("Google") == GOOGLE_MODELS
     assert models_for_provider("Agnes AI") == ("agnes-2.5-flash",)
@@ -110,9 +111,9 @@ def test_initial_state_and_routing() -> None:
 
 
 def test_get_chat_model_rejects_bad_inputs(monkeypatch) -> None:
-    monkeypatch.setattr("debate_decision_system.config.OPENAI_API_KEY", "")
-    monkeypatch.setattr("debate_decision_system.config.AGNES_API_KEY", "")
-    monkeypatch.setattr("debate_decision_system.config.GOOGLE_API_KEY", "")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("AGNES_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     with pytest.raises(ValueError, match=r"gpt-5\.6-luna"):
         get_chat_model("OpenAI", "gpt-4o")
     with pytest.raises(ValueError, match="Unknown provider"):
@@ -123,6 +124,57 @@ def test_get_chat_model_rejects_bad_inputs(monkeypatch) -> None:
         get_chat_model("Agnes AI", "agnes-2.5-flash")
     with pytest.raises(RuntimeError, match="GOOGLE_API_KEY"):
         get_chat_model("Google", "gemini-3.5-flash-lite")
+
+
+def test_get_chat_model_reads_live_env(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    class _OpenAI:
+        def __init__(self, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://example.test/v1")
+    monkeypatch.setattr("debate_decision_system.llm.ChatOpenAI", _OpenAI)
+    get_chat_model("OpenAI", "gpt-5.6-luna")
+    assert captured["model"] == "gpt-5.6-luna"
+    assert captured["api_key"] == "sk-test"
+    assert captured["base_url"] == "https://example.test/v1"
+    assert captured["reasoning"] == {"effort": "medium"}
+
+
+def test_agnes_and_gemini_clients(monkeypatch) -> None:
+    openai_kw: dict[str, object] = {}
+    google_kw: dict[str, object] = {}
+
+    class _OpenAI:
+        def __init__(self, **kwargs: object) -> None:
+            openai_kw.update(kwargs)
+
+    class _Google:
+        def __init__(self, **kwargs: object) -> None:
+            google_kw.clear()
+            google_kw.update(kwargs)
+
+    monkeypatch.setenv("AGNES_API_KEY", "agnes-test")
+    monkeypatch.setenv("GOOGLE_API_KEY", "google-test")
+    monkeypatch.setattr("debate_decision_system.llm.ChatOpenAI", _OpenAI)
+    monkeypatch.setattr("debate_decision_system.llm.ChatGoogleGenerativeAI", _Google)
+
+    get_chat_model("Agnes AI", "agnes-2.5-flash")
+    assert openai_kw["model"] == "agnes-2.5-flash"
+    assert openai_kw["api_key"] == "agnes-test"
+    assert openai_kw["base_url"] == "https://apihub.agnes-ai.com/v1"
+    assert "reasoning" not in openai_kw
+
+    get_chat_model("Google", "gemini-3.5-flash-lite", temperature=0.2)
+    assert google_kw["model"] == "gemini-3.5-flash-lite"
+    assert google_kw["google_api_key"] == "google-test"
+    assert google_kw["temperature"] == 0.2
+
+    get_chat_model("Google", "gemini-3.7-flash", temperature=0.2)
+    assert google_kw["model"] == "gemini-3.7-flash"
+    assert "temperature" not in google_kw
 
 
 def test_get_chat_model_ollama() -> None:
