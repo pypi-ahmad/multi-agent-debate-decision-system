@@ -110,18 +110,23 @@ There is no `.github/copilot/` blueprint folder.
 
 ### Install and run
 
+Native Windows (cmd / Explorer, not WSL or Docker) and native Linux. Same repo-root `.venv`.
+
 ```bash
 git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
 cd multi-agent-debate-decision-system
-uv sync --all-groups
-copy .env.example .env   # Unix: cp .env.example .env
-run.cmd                  # Windows
-uv run streamlit run app.py
 ```
+
+| OS | First run |
+| --- | --- |
+| Windows | Double-click `run.cmd`, or in cmd: `run.cmd` |
+| Linux | `./run.sh` |
 
 Open [http://localhost:8522](http://localhost:8522).
 
-`run.cmd` installs uv if missing, syncs the lockfile, copies `.env` when needed, creates `data/debates` and `data/lancedb`, and starts Streamlit.
+The launcher installs uv if missing (official installer), runs `uv python install` and `uv venv .venv` at the repo root, `uv sync`s into that env, copies `.env.example` → `.env` when needed, creates `data/debates` and `data/lancedb`, activates `.venv`, then starts Streamlit from inside it. Later launches reuse the same `.venv`.
+
+Manual path (either OS): `uv sync --all-groups`, then Windows `.venv\Scripts\streamlit.exe run app.py` or Linux `.venv/bin/streamlit run app.py`.
 
 ### First debate (Ollama)
 
@@ -185,7 +190,8 @@ Individuals skip huddle. Teams huddle privately, then the leader speaks in publi
 .
 ├── app.py                         # st.navigation entry
 ├── app_pages/                     # debate, history, analytics, knowledge
-├── run.cmd
+├── run.cmd                        # native Windows launcher
+├── run.sh                         # native Linux launcher
 ├── docs/
 ├── src/debate_decision_system/
 │   ├── graph.py                   # advance / inject / seats

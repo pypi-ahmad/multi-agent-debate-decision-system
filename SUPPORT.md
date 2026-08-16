@@ -15,8 +15,8 @@ This project is free and community-driven. You run it yourself. There is no paid
 | --- | --- |
 | Empty Ollama model list | Is the daemon up? Default `OLLAMA_BASE_URL` is `http://localhost:11434`. |
 | “API key is not set” | Copy `.env.example` to `.env` and fill **your** key. OS env wins over the file. |
-| `uv sync` failed | Read the error above the prompt. `run.cmd` now stops if sync fails. |
-| App not on 8522 | Confirm you used `run.cmd` or `uv run streamlit run app.py`. Port is in `.streamlit/config.toml`. |
+| `uv sync` failed | Read the error above the prompt. `run.cmd` / `./run.sh` stop if first-time install fails. |
+| App not on 8522 | Confirm you used `run.cmd` (Windows) or `./run.sh` (Linux). Port is in `.streamlit/config.toml`. |
 | No history rows | Run a debate first. Decisions live in local `data/decisions.db`. |
 
 ## Ask the community

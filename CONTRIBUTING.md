@@ -15,12 +15,13 @@ Read [SUPPORT.md](SUPPORT.md) if you only need help using the app. Read [DISCLAI
 
 ```bash
 uv sync --all-groups
-copy .env.example .env   # Unix: cp .env.example .env
+# Windows cmd: copy .env.example .env
+cp .env.example .env
 ```
 
 Put **your** keys in `.env` if you are not using Ollama only. Never commit `.env`, `data/decisions.db`, `data/lancedb/`, or debate JSON.
 
-Windows: double-click `run.cmd`. Other systems: `uv run streamlit run app.py` then open http://localhost:8522.
+Windows (native): double-click `run.cmd`. Linux: `./run.sh`. Both create a repo-root `.venv` with uv and run the app inside it. Open http://localhost:8522.
 
 ## Checks before a PR
 

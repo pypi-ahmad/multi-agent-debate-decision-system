@@ -7,7 +7,7 @@ Repo: https://github.com/pypi-ahmad/multi-agent-debate-decision-system
 ## Run a first debate (Ollama)
 
 1. Install [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com/). Pull a chat model, e.g. `ollama pull llama3.1:8b`.
-2. Double-click `run.cmd`, or `uv sync --all-groups` then `uv run streamlit run app.py`.
+2. Windows: double-click `run.cmd`. Linux: `./run.sh`. Either creates repo-root `.venv` with uv and runs inside it.
 3. Open http://localhost:8522
 4. On **Debate**, turn **Fully local** on. Pick an Ollama model.
 5. Leave Mode on `open`. Seats: 2 agents, 1 round.

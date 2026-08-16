@@ -49,7 +49,8 @@ No auth. No hosted API. No vector index. No CLI that runs a debate ([`docs/techn
 | Pages | [`app_pages/`](app_pages/) | Scripts, not `pages/` v1 |
 | Console | `debate-decision-system` → `debate_decision_system:main` | Prints `debate-decision-system 0.3.0` only ([`pyproject.toml#L29-L30`](pyproject.toml#L29), [`__init__.py#L15-L17`](src/debate_decision_system/__init__.py#L15)) |
 | Module | `python -m debate_decision_system` | Same `main()` ([`__main__.py#L4-L7`](src/debate_decision_system/__main__.py#L4)) |
-| Windows launcher | [`run.cmd`](run.cmd) | `uv sync` then `uv run streamlit run app.py` |
+| Windows launcher | [`run.cmd`](run.cmd) | Native Windows. Project-root `.venv` via `uv venv`; `uv sync`; activate; `streamlit run app.py` |
+| Linux launcher | [`run.sh`](run.sh) | Native Linux. Same `.venv` flow; official `uv/install.sh` if uv missing |
 | Compiled graph | `debate_graph = build_graph()` | Exists ([`graph.py#L61`](src/debate_decision_system/graph.py#L61)). Live UI path is `advance()`, not `debate_graph.invoke` ([`graph.py#L240-L256`](src/debate_decision_system/graph.py#L240)). |
 
 ### Commands & Verification Inventory
@@ -60,7 +61,7 @@ Verified against [`Makefile`](Makefile), [`pyproject.toml`](pyproject.toml), [`.
 | --- | --- | --- |
 | `uv sync --all-groups` / `make dev` | Install lockfile + lint/test/audit groups | [`Makefile#L3-L4`](Makefile#L3) |
 | `uv sync --all-groups --frozen` | CI install, no resolve | [`ci.yml#L25-L26`](.github/workflows/ci.yml#L25) |
-| `uv run streamlit run app.py` | Serve UI, port 8522 | [`run.cmd`](run.cmd), [`.streamlit/config.toml#L2`](.streamlit/config.toml#L2) |
+| `run.cmd` / `./run.sh` | Serve UI from repo-root `.venv`, port 8522 | [`run.cmd`](run.cmd), [`run.sh`](run.sh), [`.streamlit/config.toml#L2`](.streamlit/config.toml#L2) |
 | `uv run debate-decision-system` | Print identity | [`pyproject.toml#L29-L30`](pyproject.toml#L29) |
 | `uv run pytest` / `make test` | Full suite + coverage | [`Makefile#L15-L16`](Makefile#L15) |
 | `uv run pytest tests/test_analytics.py` | One file | README + pytest `testpaths` |
