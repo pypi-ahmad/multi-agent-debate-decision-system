@@ -21,6 +21,7 @@ dependencies = [
     "langchain-ollama>=1.1.0",
     "langchain-openai>=1.5.1",
     "langgraph>=1.2.11",
+    "pypdf>=6.16.1",
     "python-dotenv>=1.2.2",
     "streamlit>=1.61.1",
 ]
@@ -81,6 +82,9 @@ ignore = [
     "F401",
 ]
 "app.py" = [
+    "INP001",
+]
+"app_pages/**/*.py" = [
     "INP001",
 ]
 
