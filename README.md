@@ -22,12 +22,14 @@ git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
 
 1. [What this is](#what-this-is)
 2. [Welcome](#welcome)
-3. [Documentation](#documentation)
-4. [Features](#features)
-5. [Getting started](#getting-started)
-6. [Usage](#usage)
-7. [Architecture](#architecture)
-8. [Development](#development)
+3. [Disclaimer](#disclaimer)
+4. [Documentation](#documentation)
+5. [Features](#features)
+6. [Getting started](#getting-started)
+7. [Usage](#usage)
+8. [Architecture](#architecture)
+9. [Development](#development)
+10. [Community](#community)
 
 ## What this is
 
@@ -50,11 +52,13 @@ uv run debate-decision-system
 
 ## Welcome
 
-This project is **free**, MIT-licensed, and community-driven. Clone it from [github.com/pypi-ahmad/multi-agent-debate-decision-system](https://github.com/pypi-ahmad/multi-agent-debate-decision-system), run it, break it, file bugs, suggest features, send PRs. You are welcome here.
+Hello — thanks for being here.
 
-**You run everything on your machine.** Bring your own Ollama models or your own API keys. Nothing is hosted for you. **All data you type, upload, or send to a model is 100% your responsibility.** Read [DISCLAIMER.md](DISCLAIMER.md).
+This project is **free**, [MIT](LICENSE)-licensed, and **community-driven**. Clone it, run it, test it, file bugs, suggest features, send pull requests. First-time contributors are welcome. You do not need permission to open a thoughtful issue.
 
-**Please do not send money.** No donations, sponsorship, or paid support are needed or wanted.
+**You run everything on your own machine** with **your** Ollama models or **your** API keys. There is no hosted product, no account, and no backend operated by the author.
+
+**Please do not send money.** Donations, sponsorship, and paid support are not needed and not wanted. Kind bug reports and honest PRs are the contribution that helps.
 
 | You want to… | Go here |
 | --- | --- |
@@ -63,6 +67,16 @@ This project is **free**, MIT-licensed, and community-driven. Clone it from [git
 | Suggest a feature | [Feature request](.github/ISSUE_TEMPLATE/feature_request.md) |
 | Contribute code | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Report a vulnerability | [SECURITY.md](SECURITY.md) |
+| Read the legal / data warning | [DISCLAIMER.md](DISCLAIMER.md) |
+
+## Disclaimer
+
+> [!CAUTION]
+> **All data processed by this app is 100% your responsibility.** That includes decision questions, transcripts, uploaded files, SQLite and LanceDB stores, and anything sent to Ollama, OpenAI, Agnes AI, Google, Wikipedia, or DuckDuckGo.
+
+The software is provided **as is** under the MIT License. Outputs are generated text, not professional advice. The app has **no authentication** — do not expose port **8522** to the internet.
+
+Full text: [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Documentation
 
@@ -71,6 +85,7 @@ This project is **free**, MIT-licensed, and community-driven. Clone it from [git
 | [docs/how-to-use.md](docs/how-to-use.md) | Recipes: first debate, hosted models, teams, grounding, RAG library, history, analytics |
 | [docs/technical.md](docs/technical.md) | Layers, providers, graph, tools, RAG, memory, analytics, quality gates |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Cited onboarding map of the checkout (stack, commands, C4, subsystems) |
+| [Project_Architecture_Blueprint.md](Project_Architecture_Blueprint.md) | Layers, ADRs, and how to add a node or provider |
 | [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md) | Leave-in-place plan; residual hardening only |
 | [AGENTS.md](AGENTS.md) | Agent tone and the no-Streamlit-launch rule |
 | [.github/copilot-instructions.md](.github/copilot-instructions.md) | Copilot auto-load (same caveman block) |
@@ -232,5 +247,17 @@ uv run pytest
 CI on `push` to `main` and every PR: frozen `uv sync`, Ruff, ty, pytest, pip-audit, prek.
 
 Add runtime deps with `uv add <package>`. Do not edit dependency lists in `pyproject.toml` by hand. Nodes use fake chat clients in tests. There is no live-LLM e2e suite.
+
+## Community
+
+Clone, use, test, report, and contribute. That is the whole loop.
+
+1. Fork [the repo](https://github.com/pypi-ahmad/multi-agent-debate-decision-system) and branch from `main`.
+2. Run `make lint` and `make test` before you open a PR.
+3. Use the [pull request template](.github/PULL_REQUEST_TEMPLATE.md).
+
+Be kind. Assume good faith. The maintainer is a volunteer.
+
+Please do **not** open issues about donations, sponsorship, or “how can I pay you.” There is nothing to pay.
 
 <p align="center">Made with ❤️ by Ahmad Mujtaba</p>
