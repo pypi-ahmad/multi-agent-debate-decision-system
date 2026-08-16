@@ -1,7 +1,10 @@
-.PHONY: dev lint format test audit build hooks hooks-install
+.PHONY: dev run lint format test audit build hooks hooks-install
 
 dev:
 	uv sync --all-groups
+
+run:
+	./run.sh
 
 lint:
 	uv run ruff format --check
