@@ -33,13 +33,13 @@ git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
 
 You type a decision question (ship vs wait, pick a store, change a process). The app seats two or more agents — each a fixed reasoning style, or a **team** that huddles first. A **moderator** gives the floor. Optional **tools** (calculator, restricted math, docs, Wikipedia, web) and **LanceDB RAG** can ground the speeches. A **judge** returns an outcome (`clear_winner` / `consensus` / `split`), a recommendation, a confidence score, risks, and per-speech scores.
 
-The UI is Streamlit on port **8522**: Debate, Decision history, Analytics, Knowledge. The package name is `debate-decision-system` `0.2.0`. Persistence is local SQLite (`data/decisions.db`) plus LanceDB (`data/lancedb/`). There is no hosted API and no auth.
+The UI is Streamlit on port **8522**: Debate, Decision history, Analytics, Knowledge. The package name is `debate-decision-system` `0.3.0`. Persistence is local SQLite (`data/decisions.db`) plus LanceDB (`data/lancedb/`). There is no hosted API and no auth.
 
 The console script only prints the package identity. It does not start a debate.
 
 ```bash
 uv run debate-decision-system
-# debate-decision-system 0.2.0
+# debate-decision-system 0.3.0
 ```
 
 > [!TIP]

@@ -8,7 +8,7 @@ Cited snapshot of the **local checkout**, not GitHub `main` as advertised remote
 | Branch | `main` |
 | HEAD | `ff1c15f609dd9318dc2dcdf970c396ea4603fe42` (2026-08-16, "Update README and docs for Phase 7") |
 | Working tree | Dirty vs HEAD: `memory.py` untracked; `history.py`, `retrieve.py`, `app_pages/debate.py`, `app_pages/history.py`, tests, `README.md`, `AGENTS.md` modified |
-| Package | `debate-decision-system` `0.2.0` ([`src/debate_decision_system/__init__.py`](src/debate_decision_system/__init__.py#L8)) |
+| Package | `debate-decision-system` `0.3.0` ([`src/debate_decision_system/__init__.py`](src/debate_decision_system/__init__.py#L8)) |
 | License | MIT ([`LICENSE`](LICENSE#L1)) |
 
 This document describes **files on disk now**, including uncommitted memory work.
@@ -47,7 +47,7 @@ No auth. No hosted API. No vector index. No CLI that runs a debate ([`docs/techn
 | --- | --- | --- |
 | Streamlit app | [`app.py`](app.py) | `st.navigation` → Debate / Decision history / Analytics ([`app.py#L14-L36`](app.py#L14)) |
 | Pages | [`app_pages/`](app_pages/) | Scripts, not `pages/` v1 |
-| Console | `debate-decision-system` → `debate_decision_system:main` | Prints `debate-decision-system 0.2.0` only ([`pyproject.toml#L29-L30`](pyproject.toml#L29), [`__init__.py#L15-L17`](src/debate_decision_system/__init__.py#L15)) |
+| Console | `debate-decision-system` → `debate_decision_system:main` | Prints `debate-decision-system 0.3.0` only ([`pyproject.toml#L29-L30`](pyproject.toml#L29), [`__init__.py#L15-L17`](src/debate_decision_system/__init__.py#L15)) |
 | Module | `python -m debate_decision_system` | Same `main()` ([`__main__.py#L4-L7`](src/debate_decision_system/__main__.py#L4)) |
 | Windows launcher | [`run.cmd`](run.cmd) | `uv sync` then `uv run streamlit run app.py` |
 | Compiled graph | `debate_graph = build_graph()` | Exists ([`graph.py#L61`](src/debate_decision_system/graph.py#L61)). Live UI path is `advance()`, not `debate_graph.invoke` ([`graph.py#L240-L256`](src/debate_decision_system/graph.py#L240)). |
@@ -91,7 +91,7 @@ Verified against [`Makefile`](Makefile), [`pyproject.toml`](pyproject.toml), [`.
 | `docs/` | how-to + technical |
 | `.github/workflows/` | One workflow: `ci.yml` |
 | `.streamlit/` | Port 8522 |
-| `dist/` | Built 0.2.0 artifacts (present on disk) |
+| `dist/` | Built 0.3.0 artifacts (present on disk) |
 
 ### Deployment & Runtime Surface
 

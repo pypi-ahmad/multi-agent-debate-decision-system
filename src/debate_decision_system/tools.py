@@ -219,7 +219,7 @@ def _eval_code(node: ast.AST) -> object:  # noqa: PLR0911
 def _get_json(url: str) -> dict[str, Any]:
     req = urllib.request.Request(  # noqa: S310
         url,
-        headers={"User-Agent": "debate-decision-system/0.2.0"},
+        headers={"User-Agent": "debate-decision-system/0.3.0"},
     )
     with urllib.request.urlopen(req, timeout=8) as response:  # noqa: S310
         return json.loads(response.read().decode())

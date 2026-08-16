@@ -6,9 +6,9 @@ Repo: https://github.com/pypi-ahmad/multi-agent-debate-decision-system
 
 ## What this is
 
-A Python package (`debate-decision-system` `0.2.0`) and a Streamlit app. One LangGraph hearing produces a structured verdict. Persistence is local SQLite plus a LanceDB vector store. There is no auth and no hosted API of our own.
+A Python package (`debate-decision-system` `0.3.0`) and a Streamlit app. One LangGraph hearing produces a structured verdict. Persistence is local SQLite plus a LanceDB vector store. There is no auth and no hosted API of our own.
 
-The console entry `debate-decision-system` only prints `debate-decision-system 0.2.0`. The product is Streamlit on port **8522**.
+The console entry `debate-decision-system` only prints `debate-decision-system 0.3.0`. The product is Streamlit on port **8522**.
 
 ## Layers
 
