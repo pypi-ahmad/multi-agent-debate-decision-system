@@ -37,7 +37,7 @@ The UI never talks to providers. It calls `advance`.
 | Provider | Models | Env | Client |
 | --- | --- | --- | --- |
 | Ollama | `GET {base}/api/tags` | none | `ChatOllama` |
-| OpenAI | `gpt-5.6-luna`, `gpt-5.6-terra`; effort `medium` | `OPENAI_API_KEY` | `ChatOpenAI` |
+| OpenAI | `gpt-5.6-luna`; effort `medium` | `OPENAI_API_KEY` + optional `OPENAI_BASE_URL` | `ChatOpenAI` |
 | Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY` | `ChatOpenAI` @ `AGNES_BASE_URL` |
 | Google | `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` | `ChatGoogleGenerativeAI` |
 

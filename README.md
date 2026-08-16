@@ -142,7 +142,7 @@ You should see moderator and speaker turns, then a **Decision report**.
 | Provider | Models | Env |
 | --- | --- | --- |
 | Ollama | tags from the local daemon | `OLLAMA_BASE_URL` (default `http://localhost:11434`) |
-| OpenAI | `gpt-5.6-luna`, `gpt-5.6-terra` (medium effort) | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` |
+| OpenAI | `gpt-5.6-luna` (medium effort) | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` |
 | Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY` |
 | Google | `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` |
 

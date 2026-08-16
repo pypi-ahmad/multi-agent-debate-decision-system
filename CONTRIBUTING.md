@@ -49,7 +49,7 @@ Add runtime dependencies with `uv add <package>`. Do not edit the dependency lis
 3. Open a PR using [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
 4. Wait for CI (`quality` + `hooks`) on the PR.
 
-Do not change the provider rules: Ollama lists local tags; OpenAI is only `gpt-5.6-luna` and `gpt-5.6-terra` at medium effort; Agnes is fixed `agnes-2.5-flash`; Google is `gemini-3.5-flash-lite` and `gemini-3.7-flash`. Keys stay in environment variables.
+Do not change the provider rules: Ollama lists local tags; OpenAI is `gpt-5.6-luna` at medium effort; Agnes is fixed `agnes-2.5-flash`; Google is `gemini-3.5-flash-lite` and `gemini-3.7-flash`. Keys stay in environment variables. OS env wins over `.env`.
 
 ## Security
 

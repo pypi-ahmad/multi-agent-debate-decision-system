@@ -23,7 +23,7 @@ Empty model list means Ollama is not reachable at `OLLAMA_BASE_URL` (default `ht
 
    | Provider | Env | Dropdown |
    | --- | --- | --- |
-   | OpenAI | `OPENAI_API_KEY` | `gpt-5.6-luna`, `gpt-5.6-terra` |
+   | OpenAI | `OPENAI_API_KEY` | `gpt-5.6-luna` (medium effort) |
    | Agnes AI | `AGNES_API_KEY` | `agnes-2.5-flash` |
    | Google | `GOOGLE_API_KEY` | `gemini-3.5-flash-lite`, `gemini-3.7-flash` |
 
