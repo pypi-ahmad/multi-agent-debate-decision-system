@@ -1,8 +1,10 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""Keyword retrieval over uploaded documents. No vector store."""
+"""Retrieval facade: keyword fallback plus advanced RAG."""
 
 from __future__ import annotations
 
+from debate_decision_system.memory import relevant_decisions
+from debate_decision_system.rag.pipeline import context_for_state
 from debate_decision_system.state import DebateState, Document
 
 
@@ -33,13 +35,47 @@ def retrieve(documents: list[Document], query: str, limit: int = 3) -> str:
 
 
 def knowledge_block(state: DebateState) -> str:
+    parts: list[str] = []
     docs = list(state.get("documents") or [])
-    if not docs:
+    rag_on = state.get("rag_enabled", True)
+    if rag_on:
+        result = context_for_state(state)
+        if result.block:
+            parts.append(result.block)
+        elif state.get("grounding") == "grounded":
+            parts.append("No retrieved context. In grounded mode, say you lack evidence.")
+    elif docs:
+        turns = state.get("transcript") or []
+        query = turns[-1]["content"] if turns else state.get("topic", "")
+        hits = retrieve(docs, query)
+        if hits:
+            parts.append(f"Retrieved from uploaded docs:\n{hits}")
+        else:
+            names = ", ".join(doc.get("name", "doc") for doc in docs)
+            parts.append(f"Uploaded documents (no keyword hit): {names}")
+    memory = memory_block(state)
+    if memory:
+        parts.append(memory)
+    if not parts:
         return ""
-    turns = state.get("transcript") or []
-    query = turns[-1]["content"] if turns else state.get("topic", "")
-    hits = retrieve(docs, query)
+    return "\n\n" + "\n\n".join(parts)
+
+
+def memory_block(state: DebateState) -> str:
+    try:
+        hits = relevant_decisions(
+            str(state.get("topic") or ""),
+            exclude_id=str(state.get("debate_id") or ""),
+        )
+    except Exception:  # noqa: BLE001
+        return ""
     if not hits:
-        names = ", ".join(doc.get("name", "doc") for doc in docs)
-        return f"\n\nUploaded documents (no keyword hit): {names}"
-    return f"\n\nRetrieved from uploaded docs:\n{hits}"
+        return ""
+    lines = [
+        (
+            f"- [{str(row.get('created_at') or '')[:10]}] {row.get('topic', '')}: "
+            f"{row.get('recommendation') or '(no recommendation yet)'}"
+        )
+        for row in hits
+    ]
+    return "Related past decisions:\n" + "\n".join(lines)

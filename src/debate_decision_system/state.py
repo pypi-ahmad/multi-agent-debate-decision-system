@@ -89,6 +89,8 @@ class DebateState(TypedDict, total=False):
     options: list[str]
     pros_cons: str
     documents: list[Document]
+    rag_enabled: bool
+    pinned_ids: list[str]
     transcript: Annotated[list[Turn], operator.add]
     verdict: Verdict
     errors: Annotated[list[str], operator.add]

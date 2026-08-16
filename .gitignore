@@ -30,3 +30,7 @@ coverage.xml
 data/debates/*.json
 data/decisions.db
 data/decisions.db-*
+data/vectors.db
+data/vectors.db-*
+data/lancedb/
+data/knowledge/

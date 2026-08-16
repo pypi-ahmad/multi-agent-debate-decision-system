@@ -264,8 +264,8 @@ class _FakeStructured:
 
 
 def test_phase3_local_retrieve_history(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("debate_decision_system.history.DB_PATH", tmp_path / "decisions.db")
-    monkeypatch.setattr("debate_decision_system.history.HISTORY_DIR", tmp_path)
+    monkeypatch.setattr("debate_decision_system.memory.DB_PATH", tmp_path / "decisions.db")
+    monkeypatch.setattr("debate_decision_system.memory.HISTORY_DIR", tmp_path)
     docs = [{"name": "note.md", "text": "ship the smallest slice this quarter"}]
     state = initial_state(
         "Q",

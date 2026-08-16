@@ -30,6 +30,11 @@ page = st.navigation(
                 title="Analytics",
                 icon=":material/insights:",
             ),
+            st.Page(
+                "app_pages/knowledge.py",
+                title="Knowledge",
+                icon=":material/library_books:",
+            ),
         ]
     }
 )

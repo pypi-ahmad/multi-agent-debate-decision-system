@@ -15,6 +15,7 @@ from debate_decision_system.analytics import (
     quality_report,
     reset_for_rerun,
     run_until_done,
+    strength_over_time,
     strength_series,
 )
 from debate_decision_system.graph import advance
@@ -46,6 +47,17 @@ if conf_by_day:
     st.line_chart(
         pd.Series({day: sum(vals) / len(vals) for day, vals in sorted(conf_by_day.items())})
     )
+
+strength_days = strength_over_time(
+    [
+        (str(row.get("created_at") or ""), load_debate(str(row["debate_id"])))
+        for row in decided
+        if row.get("debate_id")
+    ]
+)
+if strength_days:
+    st.subheader("Argument strength over time")
+    st.line_chart(pd.Series(strength_days, name="strength"))
 
 labels = [f"{row['created_at'][:10]} · {row['topic'][:60]}" for row in records]
 pick = st.selectbox("Inspect a debate", range(len(records)), format_func=lambda i: labels[i])

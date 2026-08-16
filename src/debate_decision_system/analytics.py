@@ -70,6 +70,24 @@ def participation_balance(counts: dict[str, int]) -> float:
     return min(values) / max(values)
 
 
+def mean_strength(state: DebateState) -> float | None:
+    series = strength_series(state)
+    if not series:
+        return None
+    return sum(series) / len(series)
+
+
+def strength_over_time(states: list[tuple[str, DebateState]]) -> dict[str, float]:
+    """Mean argument strength by date (YYYY-MM-DD)."""
+    by_day: dict[str, list[float]] = {}
+    for day, state in states:
+        value = mean_strength(state)
+        if value is None:
+            continue
+        by_day.setdefault(day[:10], []).append(value)
+    return {day: sum(vals) / len(vals) for day, vals in sorted(by_day.items())}
+
+
 def persona_win_rates(records: list[dict[str, Any]]) -> dict[str, int]:
     wins = Counter(
         str(row.get("winner") or "Split")

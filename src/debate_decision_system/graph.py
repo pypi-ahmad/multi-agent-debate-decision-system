@@ -81,6 +81,8 @@ def initial_state(  # noqa: PLR0913
     documents: list[Document] | None = None,
     grounding: str = "open",
     seats: list[DebaterSpec] | None = None,
+    rag_enabled: bool = True,
+    pinned_ids: list[str] | None = None,
 ) -> DebateState:
     if provider not in {"Ollama", "OpenAI", "Agnes AI", "Google"}:
         msg = f"Unknown provider: {provider}"
@@ -136,6 +138,8 @@ def initial_state(  # noqa: PLR0913
             "options": [],
             "pros_cons": "",
             "documents": list(documents or []),
+            "rag_enabled": rag_enabled,
+            "pinned_ids": list(pinned_ids or []),
             "transcript": [],
             "verdict": {},
             "errors": [],

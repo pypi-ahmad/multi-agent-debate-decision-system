@@ -71,3 +71,22 @@ def test_tools_node_sets_awaiting_speech(monkeypatch) -> None:
     mid = initial_state("Q", "Ollama", "m", 2, 1)
     mid["transcript"] = [{"role": "moderator", "name": "Moderator", "content": "go"}]
     assert next_action(mid) == "tools"
+
+
+def test_tools_node_appends_rag_citations(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("debate_decision_system.rag.vectorstore.STORE_PATH", tmp_path / "lancedb")
+    docs = [{"name": "budget.md", "text": "The hardware budget is 400 dollars."}]
+    state = initial_state("hardware budget", "Ollama", "m", 2, 1, documents=docs)
+
+    class _Empty:
+        def with_structured_output(self, _cls):
+            return self
+
+        def invoke(self, _messages):
+            return ToolPlan(tools=[])
+
+    monkeypatch.setattr("debate_decision_system.tools.get_chat_model", lambda *_a, **_k: _Empty())
+    out = tools_node(state)
+    names = [turn["name"] for turn in out.get("transcript") or []]
+    assert "tool:rag" in names
+    assert "[source:" in out["transcript"][-1]["content"]

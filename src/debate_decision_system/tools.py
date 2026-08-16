@@ -158,12 +158,28 @@ def tools_node(state: DebateState) -> dict:
     speaker = public_voice(current_seat(state))
     calls = plan_tools(state, speaker)
     turns, errors = run_tool_calls(state, calls)
+    rag_turn = _rag_citation_turn(state)
+    if rag_turn:
+        turns = [*turns, rag_turn]
     update: dict[str, object] = {"awaiting_speech": True}
     if turns:
         update["transcript"] = turns
     if errors:
         update["errors"] = errors
     return update
+
+
+def _rag_citation_turn(state: DebateState) -> dict[str, str] | None:
+    if not state.get("rag_enabled", True):
+        return None
+    try:
+        from debate_decision_system.rag.pipeline import context_for_state  # noqa: PLC0415
+    except ImportError:
+        return None
+    result = context_for_state(state)
+    if not result.block:
+        return None
+    return {"role": "tool", "name": "tool:rag", "content": result.block}
 
 
 def _eval_num(node: ast.AST) -> float:
@@ -203,7 +219,7 @@ def _eval_code(node: ast.AST) -> object:  # noqa: PLR0911
 def _get_json(url: str) -> dict[str, Any]:
     req = urllib.request.Request(  # noqa: S310
         url,
-        headers={"User-Agent": "debate-decision-system/0.1.0"},
+        headers={"User-Agent": "debate-decision-system/0.2.0"},
     )
     with urllib.request.urlopen(req, timeout=8) as response:  # noqa: S310
         return json.loads(response.read().decode())

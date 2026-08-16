@@ -19,6 +19,8 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+echo Optional RAG embeddings: ollama pull nomic-embed-text
+if not exist "data\lancedb" mkdir data\lancedb
 
 if not exist ".env" (
     if exist ".env.example" (

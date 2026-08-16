@@ -28,6 +28,8 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 GOOGLE_MODELS = ("gemini-3.5-flash-lite", "gemini-3.7-flash")
 
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+RAG_EMBED_MODEL = os.environ.get("RAG_EMBED_MODEL", "nomic-embed-text")
+RAG_EMBED_BACKEND = os.environ.get("RAG_EMBED_BACKEND", "auto")
 
 PROVIDERS = ("Ollama", "OpenAI", "Agnes AI", "Google")
 

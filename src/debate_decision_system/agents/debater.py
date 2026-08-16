@@ -55,8 +55,9 @@ def debater_node(state: DebateState) -> dict:
         )
     if state.get("grounding") == "grounded":
         system += (
-            " GROUNDED MODE: use only uploaded documents plus calculator/code. "
-            "No web or Wikipedia. If you cannot cite a document, say you lack evidence."
+            " GROUNDED MODE: use only retrieved context, uploaded documents, "
+            "and calculator/code. No web or Wikipedia. Cite [source:…] or [filename]. "
+            "If you cannot cite a retrieved source, say you lack evidence."
         )
     try:
         provider = speaker.get("provider") or state["provider"]

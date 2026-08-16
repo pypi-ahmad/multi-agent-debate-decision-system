@@ -7,6 +7,7 @@ from debate_decision_system.analytics import (
     quality_report,
     reset_for_rerun,
     run_until_done,
+    strength_over_time,
     token_overlap,
 )
 from debate_decision_system.graph import debate_done, initial_state
@@ -67,3 +68,14 @@ def test_reset_and_run_until_done() -> None:
     done = run_until_done(initial_state("Q", "Ollama", "m", 2, 1), stepper)
     assert debate_done(done)
     assert done["verdict"]["winner"] == "B"
+
+
+def test_strength_over_time() -> None:
+    state = initial_state("Q", "Ollama", "m", 2, 1)
+    state["verdict"] = {
+        "scores": [
+            {"speaker": "A", "clarity": 8, "logic": 8, "evidence": 8, "persuasiveness": 8},
+        ]
+    }
+    series = strength_over_time([("2026-08-16T10:00:00", state)])
+    assert series["2026-08-16"] == 8.0

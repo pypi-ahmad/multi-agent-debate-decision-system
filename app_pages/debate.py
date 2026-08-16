@@ -16,8 +16,14 @@ from debate_decision_system.graph import (
     inject_human,
     request_evidence,
 )
-from debate_decision_system.history import list_debates, load_debate, save_debate
+from debate_decision_system.memory import (
+    list_debates,
+    load_debate,
+    relevant_decisions,
+    save_debate,
+)
 from debate_decision_system.personas import PERSONAS
+from debate_decision_system.rag.pipeline import context_for_state
 from debate_decision_system.state import DebateState, Document, Turn
 from debate_decision_system.teams import TEAM_TEMPLATES, members_from_template
 
@@ -132,6 +138,11 @@ with st.sidebar:
     )
     if grounding not in {"open", "grounded"}:
         grounding = "open"
+    rag_enabled = st.toggle(
+        "RAG",
+        value=True,
+        help="Hybrid vector + keyword retrieve, rerank, and citations.",
+    )
     allowed = ("Ollama",) if local_only else config.PROVIDERS
     default_provider = st.segmented_control(
         "Default provider",
@@ -306,6 +317,7 @@ with st.sidebar:
         help="Text, PDF, code, or a zip of a folder.",
     )
     past = list_debates()
+    pinned_ids: list[str] = []
     if past:
         choices = ["(new)", *[f"{row['debate_id']} — {row['topic'][:48]}" for row in past[:12]]]
         chosen = st.selectbox("Resume", choices, key="history_pick")
@@ -314,6 +326,13 @@ with st.sidebar:
             _sync(loaded)
             st.session_state.auto_run = False
             st.rerun()
+        pin_labels = [f"{row['debate_id']} — {row['topic'][:48]}" for row in past[:20]]
+        pinned = st.multiselect(
+            "Pin past decisions into RAG",
+            pin_labels,
+            key="pin_decisions",
+        )
+        pinned_ids = [item.split(" — ", 1)[0] for item in pinned]
 
     st.caption(f"debate-decision-system {__version__}")
 
@@ -328,6 +347,16 @@ if not st.session_state.transcript:
     if picked and picked != st.session_state.topic:
         st.session_state.topic = picked
         st.rerun()
+
+related = relevant_decisions(
+    str(st.session_state.topic).strip(),
+    exclude_id=str((st.session_state.debate or {}).get("debate_id") or ""),
+)
+if related:
+    with st.expander("Related past decisions", icon=":material/history:"):
+        for row in related:
+            rec = row.get("recommendation") or "(no recommendation yet)"
+            st.markdown(f"**{row['created_at'][:10]} · {row['topic']}** — {rec}")
 
 missing_key = None if local_only else _providers_missing(used_providers)
 seats_ok = all(model for _provider, model in seat_models) and bool(mod_model) and bool(judge_model)
@@ -344,6 +373,15 @@ if debate is not None:
     st.markdown(timeline_mermaid(debate))
     if debate.get("options"):
         st.caption("Options: " + " · ".join(debate["options"]))
+    if debate.get("rag_enabled", True):
+        rag = context_for_state(debate)
+        with st.expander("Retrieved context and citations", icon=":material/menu_book:"):
+            if rag.hits:
+                st.caption(f"Query: {rag.rewritten_query}")
+                for hit in rag.hits:
+                    st.markdown(f"{hit.citation}  \n{hit.text}")
+            else:
+                st.caption("No RAG hits yet.")
 
 with st.container(horizontal=True):
     start = st.button(
@@ -376,6 +414,8 @@ if start:
         grounding=grounding,
         documents=_read_uploads(list(uploads or [])),
         seats=seats,
+        rag_enabled=rag_enabled,
+        pinned_ids=pinned_ids,
     )
     _sync(state)
     st.session_state.auto_run = True
@@ -448,13 +488,24 @@ if verdict:
             st.markdown(quality["summary"])
 
 if st.session_state.debate is not None and st.session_state.transcript:
-    st.download_button(
-        "Download markdown",
-        data=debate_to_markdown(st.session_state.debate),
-        file_name="debate.md",
-        mime="text/markdown",
-        icon=":material/download:",
+    tags_raw = st.text_input(
+        "Tags",
+        placeholder="infra, sqlite",
+        key="decision_tags",
+        help="Saved with the decision. Comma-separated.",
     )
+    with st.container(horizontal=True):
+        if st.button("Save decision", icon=":material/save:"):
+            tags = [part.strip() for part in tags_raw.split(",") if part.strip()]
+            save_debate(st.session_state.debate, tags=tags or None)
+            st.toast("Decision saved to local SQLite")
+        st.download_button(
+            "Download markdown",
+            data=debate_to_markdown(st.session_state.debate),
+            file_name="debate.md",
+            mime="text/markdown",
+            icon=":material/download:",
+        )
 
 debater_turns = [t for t in st.session_state.transcript if t["role"] == "debater"]
 speakers = list(dict.fromkeys(t["name"] for t in debater_turns))
