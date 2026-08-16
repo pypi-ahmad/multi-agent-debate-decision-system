@@ -1,0 +1,30 @@
+# Secrets
+.env
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+.venv-dev/
+
+# Build
+build/
+dist/
+wheels/
+
+# Tools
+.ruff_cache/
+.ty/
+.codegraph/
+.remember/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Local debate history
+data/debates/*.json
