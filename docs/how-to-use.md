@@ -1,112 +1,80 @@
 # How to use the debate system
 
-Recipes for common jobs. For internals, see [technical.md](technical.md).
+Recipes for common jobs. Internals: [technical.md](technical.md).
 
 Repo: https://github.com/pypi-ahmad/multi-agent-debate-decision-system
 
 ## Run a first debate (Ollama)
 
-Goal: see a transcript and a judgment on your machine.
-
-1. Install [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com/). Pull one chat model, for example `ollama pull llama3.1:8b`.
-2. In the repo root, double-click `run.cmd` (Windows) or run `uv sync --all-groups` then `uv run streamlit run app.py`.
+1. Install [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com/). Pull a chat model, e.g. `ollama pull llama3.1:8b`.
+2. Double-click `run.cmd`, or `uv sync --all-groups` then `uv run streamlit run app.py`.
 3. Open http://localhost:8522
-4. Turn **Fully local** on. Confirm the default provider is Ollama and a pulled model is in the dropdown.
-5. Leave Mode on `open`. Set Debaters to 2 and Rounds to 1.
-6. Enter a decision question, or pick one of the example pills.
-7. Click **Start debate**. Wait until the status finishes.
+4. On **Debate**, turn **Fully local** on. Pick an Ollama model.
+5. Leave Mode on `open`. Seats: 2 agents, 1 round.
+6. Enter a decision question. Click **Start debate**.
 
-You should see moderator and debater turns, then a **Decision report** with an outcome and a recommendation.
+You should see moderator and speaker turns, then a **Decision report**.
 
-If the model list is empty, the Ollama daemon is not reachable at `OLLAMA_BASE_URL` (default `http://localhost:11434`). Pull a model, then refresh the page.
+Empty model list means Ollama is not reachable at `OLLAMA_BASE_URL` (default `http://localhost:11434`).
 
-## Run a hosted model
+## Use a hosted model
 
-Goal: use OpenAI, Agnes AI, or Google instead of Ollama.
+1. Copy `.env.example` to `.env`. Fill one key:
 
-1. Copy `.env.example` to `.env`.
-2. Fill only the key for the provider you will use:
-
-   | Provider | Env var | Models in the dropdown |
+   | Provider | Env | Dropdown |
    | --- | --- | --- |
-   | OpenAI | `OPENAI_API_KEY` | `gpt-5.6-luna`, `gpt-5.6-terra` (medium effort) |
+   | OpenAI | `OPENAI_API_KEY` | `gpt-5.6-luna`, `gpt-5.6-terra` |
    | Agnes AI | `AGNES_API_KEY` | `agnes-2.5-flash` |
    | Google | `GOOGLE_API_KEY` | `gemini-3.5-flash-lite`, `gemini-3.7-flash` |
 
-3. Turn **Fully local** off.
-4. Pick that provider as Default provider (and on each seat, if you override).
-5. Start the debate. The Start button stays disabled until the matching key is set.
-
-Optional: `OPENAI_BASE_URL` and `AGNES_BASE_URL` if you are not using the defaults in `.env.example`.
+2. Turn **Fully local** off. Pick that provider. Start.
 
 ## Run a structured decision
 
-Goal: get options and pros/cons before the hearing, then a report with confidence.
+Set Mode to `structured`. The first turns are **Analyst** (options, then pros/cons). Then the hearing and a report with confidence.
 
-1. Set Mode to `structured`.
-2. Enter the problem as a decision question (what should we do, not a yes/no chat prompt).
-3. Start the debate.
+## Use a team seat
 
-The first two turns come from **Analyst**: a numbered option list, then a pros/cons write-up. Then the moderator opens the floor and the usual hearing runs. The judge report includes outcome (`clear_winner`, `consensus`, or `split`), confidence 0–100, strongest arguments, and key risks.
+1. Under Seats, set Type to `team`.
+2. Pick Engineering, Product, Business, Security, or Devil's Advocate.
+3. Mark one member as Leader.
 
-## Give agents different models
+Members huddle in expanders. The public turn is the team name with a **team** badge. You can mix agent seats and team seats.
 
-Goal: one persona on a local 8B model, the judge on a hosted model.
+## Ground speeches in documents
 
-1. Leave **Fully local** off.
-2. Under **Seats**, set each seat's persona, provider, and model.
-3. Under **Moderator and judge**, set those two seats separately.
-4. Confirm every chosen provider has its key in `.env` (or is Ollama).
+1. Set Knowledge to `grounded`.
+2. Upload `.pdf`, `.md`, `.py`, `.txt`, or a `.zip` of a folder.
+3. Start. Agents may use **docs**, calculator, and code only. Speeches should include `[filename]`.
 
-If **Fully local** is on, every seat is forced to Ollama regardless of earlier dropdowns.
+**Open** knowledge also allows Wikipedia and DuckDuckGo. Tool results appear as `tool:…` turns.
 
-## Pause, inject, or demand evidence
+## Pause, inject, demand evidence
 
-Goal: steer a live hearing.
+Pause → **Inject** a human note, or **Ask for evidence** (returns the floor to the last public speaker). **One turn** / **Run remaining** step the graph.
 
-- **Pause** stops auto-advance.
-- **One turn** runs the next graph node only.
-- **Run remaining** continues until the judge finishes.
-- **Inject** appends a Human turn. The next node is the moderator, who will see your note.
-- **Ask for evidence** writes a moderator evidence request and gives the floor back to the last debater.
+## Search and continue a past decision
 
-You cannot type into the page while a single LLM call is in flight. Pause first, then inject.
+1. Open **Decision history**.
+2. Search (e.g. “Why did we choose SQLite last month?”). Filter status, outcome, date, confidence.
+3. **Continue debate** resumes the graph. **Re-run with new settings** clears the transcript and keeps seats.
+4. **Link decisions** ties related hearings. **Export record** downloads markdown.
 
-## Use uploaded documents
+Storage is local SQLite: `data/decisions.db` (gitignored).
 
-Goal: have speakers cite a spec or note you already have.
+## Study reasoning patterns
 
-1. In the sidebar, upload `.txt`, `.md`, `.csv`, or `.json` (not PDF).
-2. Start a new debate. Uploads attach to that run only.
-3. Agents receive keyword hits from those files in their prompts.
+1. Finish at least one debate.
+2. Open **Analytics**.
+3. Read win rates, participation, circular-speech flags, and the quality report.
+4. **Run simulation**: pick models and 2–5 runs. Each run is saved in history under a batch id.
 
-This is substring overlap, not embeddings. Short, distinctive terms in the docs work better than vague ones.
+Simulation calls live models. Keep runs small.
 
-## Continue an old debate
-
-Goal: reopen a hearing you already ran.
-
-1. After any start or step, the app writes `data/debates/<id>.json`.
-2. In the sidebar **History** list, pick a row and click **Load debate**.
-3. Use One turn or Run remaining if it was not finished.
-
-JSON files in `data/debates/` are local and gitignored. Deleting a file removes it from History.
-
-## Export the record
-
-Goal: keep a copy outside the app.
-
-After there is a transcript, click **Download markdown**. The file includes settings, options, transcript, scores, and the judgment.
-
-To compare two personas, wait until at least two debaters have spoken, then use **Compare arguments**.
-
-## Quality commands (developers)
+## Developer checks
 
 ```bash
-uv sync --all-groups
 uv run pytest
 uv run ruff check
 uv run ty check src/
 ```
-
-Or `make test` / `make lint`.

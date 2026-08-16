@@ -18,9 +18,9 @@
 
 </div>
 
-Ask a decision question. A moderator runs a bounded hearing between opposing personas. A judge returns an outcome (clear winner, consensus, or split), a recommendation, a confidence score, and a transcript you can export.
+Ask a decision question. Seats can be single personas or teams. A moderator runs a bounded hearing. Tools and uploaded docs can ground the speeches. A judge returns an outcome, a recommendation, a confidence score, and a transcript you can store and re-run.
 
-The installable package is `debate-decision-system`. The runner is the Streamlit app in [`app.py`](app.py).
+The package is `debate-decision-system`. The app is Streamlit: [`app.py`](app.py) plus [`app_pages/`](app_pages/).
 
 > [!TIP]
 > Start with [Ollama](https://ollama.com/) and turn on **Fully local** if you want a run with no API keys.
@@ -35,31 +35,31 @@ The installable package is `debate-decision-system`. The runner is the Streamlit
 
 ## Features
 
-- **Decision report** — outcome, winner, recommendation, confidence, strongest arguments, key risks
-- **Two modes** — `open` debate, or `structured` (options → pros/cons → debate → judge)
-- **10 personas** — Pragmatist, Skeptic, First-principles, Devil's advocate, Ethicist, Operator, Optimistic, Data-driven, Risk-averse, Creative
-- **Per-seat models** — each agent can use a different provider/model
-- **Live controls** — start, pause, one turn, run remaining, inject a human note, ask for evidence
-- **Docs in the room** — upload `.txt` / `.md` / `.csv` / `.json`; agents keyword-search them
-- **History** — debates save under `data/debates/` and can be loaded again
-- **Compare + export** — side-by-side speeches, 0–10 scores, download `debate.md`
+- **Three pages** — Debate, Decision history, Analytics
+- **Decision report** — outcome (`clear_winner` / `consensus` / `split`), winner, recommendation, confidence, risks
+- **Open or structured** — structured mode is options → pros/cons → debate → judge
+- **Teams** — Engineering, Product, Business, Security, Devil's Advocate; huddle then leader speaks
+- **Tools** — calculator, restricted math code, docs search; Wikipedia and DuckDuckGo in **open** knowledge mode
+- **Grounded mode** — documents + calculator/code only; speeches must cite `[source]`
+- **Memory** — every step writes SQLite `data/decisions.db`; search, link, continue, export
+- **Analytics** — win rates, circular-speech flags, quality report, multi-model simulation
 
 ## Technology stack
 
 | Layer | Choice |
 | --- | --- |
-| Language | Python `>=3.11` (local default `.python-version` is `3.13`) |
+| Language | Python `>=3.11` (`.python-version` is `3.13`) |
 | Package | [uv](https://docs.astral.sh/uv/) + `uv.lock` + `uv_build` |
-| Graph | LangGraph (`langgraph>=1.2.11`) |
-| LLM | LangChain adapters for Ollama, OpenAI, Agnes AI, Google |
-| UI | Streamlit `>=1.61.1` on port **8522** |
-| Quality | Ruff, ty, pytest (fail under 80%), pip-audit, prek hooks |
-
-No database. History is JSON files. Keyword retrieve, not a vector store.
+| Graph | LangGraph |
+| LLM | LangChain adapters: Ollama, OpenAI, Agnes AI, Google |
+| UI | Streamlit `>=1.61.1` on port **8522** (`st.navigation`) |
+| Docs | `pypdf` for PDF text; keyword retrieve, not a vector store |
+| Memory | SQLite (`stdlib`) at `data/decisions.db` |
+| Quality | Ruff, ty, pytest (fail under 80%), pip-audit, prek |
 
 ## Architecture
 
-`advance()` walks one node at a time so the UI can pause and inject. The compiled `debate_graph` is the same shape.
+`advance()` walks one node at a time so the UI can pause, inject, and huddle.
 
 ```mermaid
 flowchart LR
@@ -68,13 +68,15 @@ flowchart LR
   Opt --> PC[Pros / cons]
   PC --> Mod[Moderator]
   Mode -->|open| Mod
-  Mod -->|floor| Deb[Debater]
-  Deb --> Mod
-  Mod -->|quota or evidence| Judge
+  Mod --> Tools
+  Tools --> Huddle
+  Huddle --> Speak[Debater / team lead]
+  Speak --> Mod
+  Mod -->|quota| Judge
   Judge --> Report[Decision report]
 ```
 
-Seats, temperature, speaking order, and uploaded docs live on `DebateState` in `src/debate_decision_system/state.py`.
+Individuals skip huddle. Teams huddle privately, then the leader speaks in public.
 
 ## Getting started
 
@@ -82,21 +84,20 @@ Seats, temperature, speaking order, and uploaded docs live on `DebateState` in `
 
 - [uv](https://docs.astral.sh/uv/) 0.11+
 - Python 3.11+
-- Either a local [Ollama](https://ollama.com/) model, or an API key in `.env`
+- A local [Ollama](https://ollama.com/) model, or an API key in `.env`
 
 ### Install and run
 
 ```bash
 uv sync --all-groups
 copy .env.example .env   # Unix: cp .env.example .env
-run.cmd                  # Windows: uv + sync + .env + Streamlit
-# Any platform:
+run.cmd                  # Windows
 uv run streamlit run app.py
 ```
 
 Open [http://localhost:8522](http://localhost:8522).
 
-`run.cmd` installs uv if missing, runs `uv sync`, copies `.env.example` when needed, creates `data/debates`, and starts the app.
+`run.cmd` installs uv if missing, syncs the lockfile, copies `.env` when needed, creates `data/debates`, and starts Streamlit.
 
 ## Usage
 
@@ -104,60 +105,48 @@ Open [http://localhost:8522](http://localhost:8522).
 | --- | --- | --- |
 | Ollama | tags from the local daemon | `OLLAMA_BASE_URL` (default `http://localhost:11434`) |
 | OpenAI | `gpt-5.6-luna`, `gpt-5.6-terra` (medium effort) | `OPENAI_API_KEY`, optional `OPENAI_BASE_URL` |
-| Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY`, default base `https://apihub.agnes-ai.com/v1` |
+| Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY` |
 | Google | `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` |
 
-Bounds in `src/debate_decision_system/config.py`: 2–8 debaters, 1–6 rounds, temperature 0.0–1.2, speaking order sequential / reverse / random.
+Bounds in `config.py`: 2–8 seats, 1–6 rounds, 2–4 members per team, temperature 0.0–1.2.
 
-Add runtime deps with `uv add <package>`. Do not edit the dependency list in `pyproject.toml` by hand.
+Add runtime deps with `uv add <package>`. Do not edit dependency lists in `pyproject.toml` by hand.
 
 ## Project structure
 
 ```text
 .
-├── app.py                            # Streamlit runner (port 8522)
-├── run.cmd                           # Windows one-click launch
-├── .env.example
+├── app.py                         # st.navigation entry
+├── app_pages/debate.py            # hearing UI
+├── app_pages/history.py           # search / continue / link / export
+├── app_pages/analytics.py         # charts + simulation
+├── run.cmd
+├── docs/
 ├── src/debate_decision_system/
-│   ├── config.py                     # providers, keys, bounds
-│   ├── llm.py                        # chat model factory
-│   ├── state.py                      # DebateState / Turn / Verdict
-│   ├── personas.py                   # ten personas
-│   ├── graph.py                      # LangGraph + step/inject/evidence
-│   ├── retrieve.py                   # keyword search over uploads
-│   ├── history.py                    # JSON save/load
-│   ├── export.py                     # markdown + mermaid timeline
-│   └── agents/                       # options, pros/cons, moderator, debater, judge
+│   ├── graph.py                   # advance / inject / seats
+│   ├── agents/                    # options, huddle, moderator, debater, judge
+│   ├── tools.py                   # calc, code, wiki, web, docs
+│   ├── teams.py                   # team templates
+│   ├── history.py                 # SQLite
+│   ├── analytics.py               # quality + simulate helpers
+│   └── documents.py               # PDF / zip / text loaders
 ├── tests/
-├── data/debates/                     # local history (JSON gitignored)
-├── .github/workflows/ci.yml
-├── pyproject.toml
+├── data/decisions.db              # local, gitignored
 └── Makefile
 ```
 
 ## Development
 
 ```bash
-make dev        # uv sync --all-groups
-make format     # ruff format + autofix
-make lint       # format check, ruff, ty
-make test       # pytest (fails under 80% coverage)
-make audit      # pip-audit
-make build      # sdist + wheel
-```
-
-CI on `push` to `main` and on every PR: frozen `uv sync`, Ruff, ty, pytest, pip-audit, plus a `hooks` job (`prek`).
-
-```bash
+make dev lint test audit
 uv tool install prek && prek install
-prek run --all-files
 ```
 
-## Testing
+CI on `push` to `main` and every PR: frozen `uv sync`, Ruff, ty, pytest, pip-audit, `prek` hooks.
 
 ```bash
 uv run pytest
-uv run pytest tests/test_debate.py::test_structured_flow_and_evidence
+uv run pytest tests/test_analytics.py
 ```
 
-Coverage is collected on `src/debate_decision_system` and **fails under 80%**. Nodes run against fake chat clients. There is no live-LLM or Streamlit e2e suite.
+Coverage is collected on `src/debate_decision_system` and **fails under 80%**. Nodes use fake chat clients. There is no live-LLM e2e suite.

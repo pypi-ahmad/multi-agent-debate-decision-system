@@ -1,136 +1,92 @@
 # Technical documentation
 
-How the Phase 3 system is put together. For recipes, see [how-to-use.md](how-to-use.md).
+How the current system is put together (through Phase 7). Recipes: [how-to-use.md](how-to-use.md).
 
 Repo: https://github.com/pypi-ahmad/multi-agent-debate-decision-system
 
 ## What this is
 
-A Python package (`debate-decision-system`) plus a Streamlit runner (`app.py`). One in-memory LangGraph hearing produces a structured verdict. There is no database, no auth, and no hosted API of our own.
+A Python package (`debate-decision-system`) and a Streamlit app. One LangGraph hearing produces a structured verdict. Persistence is a local SQLite file. There is no auth and no hosted API of our own.
 
-The console entry point `debate-decision-system` only prints `debate-decision-system 0.1.0`. The product surface is Streamlit on port **8522** (`.streamlit/config.toml`).
+The console entry `debate-decision-system` only prints `debate-decision-system 0.1.0`. The product is Streamlit on port **8522**.
 
 ## Layers
 
 | Layer | Location | Job |
 | --- | --- | --- |
-| UI | `app.py` | Widgets, step loop, history, upload, export |
-| Graph | `src/debate_decision_system/graph.py` | `initial_state`, `advance`, `inject_human`, `request_evidence` |
-| Nodes | `src/debate_decision_system/agents/` | options, pros/cons, moderator, debater, judge |
-| Models | `src/debate_decision_system/llm.py` | Provider factory |
-| Config | `src/debate_decision_system/config.py` | Env keys, catalogs, bounds |
-| State | `src/debate_decision_system/state.py` | `DebateState`, `Turn`, `Verdict` |
-| Retrieve | `src/debate_decision_system/retrieve.py` | Keyword search over uploads |
-| History | `src/debate_decision_system/history.py` | JSON under `data/debates/` |
-| Export | `src/debate_decision_system/export.py` | Markdown + mermaid timeline |
+| Nav | `app.py` | `st.navigation`: Debate, Decision history, Analytics |
+| Hearing UI | `app_pages/debate.py` | Seats, step loop, inject, export |
+| History UI | `app_pages/history.py` | Search, continue, link, re-run |
+| Analytics UI | `app_pages/analytics.py` | Charts, quality, simulation |
+| Graph | `graph.py` | `initial_state`, `advance`, inject, evidence |
+| Nodes | `agents/` | options, pros/cons, moderator, tools, huddle, debater, judge |
+| Tools | `tools.py` | calculator, code, wikipedia, web_search, docs |
+| Teams | `teams.py` | templates, leader, huddle members |
+| Memory | `history.py` | SQLite `data/decisions.db` |
+| Analytics | `analytics.py` | overlap, wins, quality, reset, run-until-done |
+| Docs load | `documents.py` | text, PDF (`pypdf`), zip |
 
-`app.py` does not call providers itself. It builds state and calls `advance`.
+The UI never talks to providers. It calls `advance`.
 
 ## Runtime and providers
 
-Keys load from the repo-root `.env` via `python-dotenv` (`config.py`). Variables already set in the OS are not overwritten.
+`.env` is loaded from the repo root. OS env wins.
 
-| Provider | How models are chosen | Required env | Client |
+| Provider | Models | Env | Client |
 | --- | --- | --- | --- |
-| Ollama | `GET {OLLAMA_BASE_URL}/api/tags` | none | `ChatOllama` |
-| OpenAI | fixed `gpt-5.6-luna`, `gpt-5.6-terra`; reasoning effort `medium` | `OPENAI_API_KEY` | `ChatOpenAI` |
-| Agnes AI | fixed `agnes-2.5-flash` | `AGNES_API_KEY` | `ChatOpenAI` against `AGNES_BASE_URL` |
-| Google | fixed `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` | `ChatGoogleGenerativeAI` |
+| Ollama | `GET {base}/api/tags` | none | `ChatOllama` |
+| OpenAI | `gpt-5.6-luna`, `gpt-5.6-terra`; effort `medium` | `OPENAI_API_KEY` | `ChatOpenAI` |
+| Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY` | `ChatOpenAI` @ `AGNES_BASE_URL` |
+| Google | `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` | `ChatGoogleGenerativeAI` |
 
-Defaults: OpenAI base `https://api.openai.com/v1`, Agnes base `https://apihub.agnes-ai.com/v1`, Ollama `http://localhost:11434`.
+`local_only` rewrites every seat and member to Ollama.
 
-`local_only=True` rewrites the default provider and every seat to Ollama in `initial_state`.
+Bounds: 2–8 seats, 1–6 rounds, 2–4 team members, temperature 0.0–1.2, speaking order sequential / reverse / random. Ten personas. Timeouts 120s Ollama, 90s hosted.
 
-Bounds: 2–8 debaters, 1–6 rounds, temperature 0.0–1.2, speaking order `sequential` | `reverse` | `random`. Ten personas in `personas.py`. `assign_personas(n)` takes the first *n*; the UI uses `select_personas` per seat.
+## Graph
 
-Timeouts: 120s Ollama, 90s hosted.
+Live path (`next_action` / `advance`):
 
-## State
+1. Structured: `options` → `pros_cons` (Analyst turns).
+2. `moderator` (or `{phase: judge}` when `speeches_done >= rounds * seats`).
+3. `tools` — plan up to 2 tool calls; append `role=tool` turns.
+4. `huddle` — only if the current seat `kind==team` and huddle is not done; one member per step.
+5. `debater` — individual persona, or team leader using huddle notes. Public name is the seat name.
+6. Repeat until judge.
 
-`DebateState` is a `TypedDict`. Load-bearing fields:
+`awaiting_speech` is set by `tools_node`. `huddle_done` / `huddle_index` reset after a public speech.
 
-- Identity: `debate_id`, `topic`, `mode` (`open` | `structured`)
-- Seats: `debaters[]` each with `name`, `style`, `instructions`, `provider`, `model`; plus `moderator_*` and `judge_*`
-- Controls: `max_rounds`, `temperature`, `speaking_order`, `local_only`
-- Flow: `phase` (`options` | `pros_cons` | `debate` | `judge`), `next_speaker`, `speeches_done`
-- Structured extras: `options`, `pros_cons`
-- Knowledge: `documents` (`name`, `text`)
-- Accumulators: `transcript` and `errors` (list-append)
-- Result: `verdict` (`winner`, `recommendation`, `rationale`, `scores`, `outcome`, `confidence`, `strongest_arguments`, `key_risks`)
+Human inject does not increment `speeches_done`. `request_evidence` retargets `next_speaker` to the last public debater.
 
-A turn `role` is `moderator` | `debater` | `judge` | `human`. Structured Analyst turns use `role=moderator` and `name=Analyst`.
+## Grounding and tools
 
-## Control flow
+| Knowledge | Allowed tools |
+| --- | --- |
+| `open` | calculator, code, docs, wikipedia, web_search |
+| `grounded` | calculator, code, docs |
 
-The compiled `debate_graph` is:
+Code is a restricted `ast` math expression (no import, no attributes). Calculator is numbers and `+ - * / ** %`. Wikipedia is the REST summary API. Web search is DuckDuckGo Instant Answer JSON. Docs is keyword overlap (`retrieve.py`).
 
-`START` → (`options` → `pros_cons` if structured) → `moderator` ⇄ `debater` → `judge` → `END`.
+In grounded mode, if documents exist and the speech has no `[`, the debater is asked once to cite.
 
-The UI does **not** stream that compiled graph in one shot. It stores `DebateState` in `st.session_state` and calls `advance` once per step (or in a rerun loop when auto-run is on). That is what makes Pause, Inject, and Ask for evidence possible.
+## Teams
 
-`next_action` chooses the node:
+A seat is `kind=agent` or `kind=team`. Team templates live in `TEAM_TEMPLATES`. Huddle turns use `role=huddle` and `name="{team} / {persona}"`. The leader's public turn is `role=debater` with the team name.
 
-1. Stop if `debate_done` (verdict present, or last turn is the judge).
-2. `options` / `pros_cons` / `judge` if `phase` says so.
-3. `moderator` if there are no turns, the last role is `debater` or `human`, or `speeches_done >= max_rounds * len(debaters)`.
-4. `debater` if the last turn is a real moderator (not Analyst). After Analyst, the next action is another moderator so the hearing still opens.
+## Memory
 
-`apply_update` merges node dicts. `transcript` and `errors` concatenate; other keys replace.
+`save_debate` upserts `decisions` (topic, timestamps, status, recommendation, confidence, outcome, winner, participants, arguments, full `state_json`). `decision_links` stores undirected pairs. `search_decisions` uses SQL `LIKE` on topic, recommendation, arguments, rationale, participants.
 
-`request_evidence` does not call an LLM. It appends a moderator evidence request and sets `next_speaker` to the last debater.
+`load_debate` reads SQLite; if missing, it will ingest a leftover `data/debates/<id>.json`.
 
-Speaking order (`moderator.next_speaker_index`):
+## Analytics
 
-- `sequential`: `speeches_done % n`
-- `reverse`: last seat first, then backward
-- `random`: `hash((topic, speeches_done, names)) % n` (stable for a process, not across Python hash seeds)
-
-Human inject does not increment `speeches_done`.
-
-## Nodes
-
-Each node returns a partial state update. LLM failures are caught and become a transcript line plus an `errors` entry. The hearing continues.
-
-| Node | File | Model seat | Output |
-| --- | --- | --- | --- |
-| `options_node` | `agents/structure.py` | moderator | 2–4 options; `phase=pros_cons` |
-| `pros_cons_node` | `agents/structure.py` | moderator | `pros_cons` text; `phase=debate` |
-| `moderator_node` | `agents/moderator.py` | moderator | floor-giving turn, or `{phase: judge}` when the quota is hit |
-| `debater_node` | `agents/debater.py` | that seat | one speech; `speeches_done += 1` |
-| `judge_node` | `agents/judge.py` | judge | structured `JudgeOutput` → `verdict` |
-
-The judge asks for `outcome` in `{clear_winner, consensus, split}`, `confidence` 0–100, argument and risk lists, and per-speech scores 0–10 on clarity, logic, evidence, persuasiveness.
-
-Prompts include `knowledge_block(state)` when documents exist, and the option list when structured mode has already run.
-
-## Retrieval
-
-`retrieve.py` scores each uploaded document by how often query tokens of length > 2 appear. It returns up to three snippets. No embeddings, no extra package. Uploads are decoded as UTF-8 and truncated to 20 000 characters each in `app.py`.
-
-## Persistence and export
-
-`save_debate` writes `data/debates/<debate_id>.json` after every UI sync. `list_debates` sorts by file mtime. JSON history is gitignored; `data/debates/.gitkeep` keeps the folder.
-
-`debate_to_markdown` dumps settings, options, transcript, score table, and the report. `timeline_mermaid` is a left-to-right phase flowchart; the current `phase` is stroked.
-
-## UI loop
-
-`app.py` is a single page (not `st.navigation`). After **Start debate** it sets `auto_run` and `st.rerun`s. Each rerun, if `auto_run` and the debate is not done, it calls `advance` once and reruns again. **Pause** clears `auto_run`. That yields between LLM calls so the user can inject.
-
-Provider dropdowns read Ollama tags through `@st.cache_data(ttl="30s")`.
+`quality_report` computes participation, Jaccard-style token overlap on consecutive public speeches (flag ≥ 0.55), mean score axes, and a one-paragraph summary. `reset_for_rerun` deep-copies a state, new `debate_id`, empty transcript. `run_until_done` loops `advance` (used by simulation). Win rates come from decided SQLite rows.
 
 ## Quality gates
 
-From `Makefile` / `.github/workflows/ci.yml`:
+`make lint` / `make test` / `make audit`. Coverage fail-under 80%. CI: frozen `uv sync`, Ruff, ty, pytest, pip-audit, prek.
 
-- `uv sync --all-groups --frozen`
-- `ruff check`, `ruff format --check`, `ty check src/`
-- `pytest` with branch coverage, fail under 80%
-- `pip-audit`
-- `prek` hooks job (Ruff, secrets, actionlint, zizmor)
+## Not here
 
-Tests fake the chat client. They do not call live models or Streamlit.
-
-## What is not here
-
-No auth, no multi-user store, no PDF parse, no vector index, no crash-resume checkpointer (a loaded JSON file is the resume mechanism), no CLI that runs a debate.
+No auth, no multi-user server, no vector index, no unrestricted `exec`, no CLI that runs a debate.
