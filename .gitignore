@@ -29,6 +29,9 @@ coverage.xml
 # Generated knowledge graphs
 graphify-out/
 
+# Generated architecture diagrams
+archify-out/
+
 # Local debate history
 data/debates/*.json
 data/decisions.db

@@ -138,7 +138,7 @@ def test_get_chat_model_reads_live_env(monkeypatch) -> None:
     monkeypatch.setattr("debate_decision_system.llm.ChatOpenAI", _OpenAI)
     get_chat_model("OpenAI", "gpt-5.6-luna")
     assert captured["model"] == "gpt-5.6-luna"
-    assert captured["api_key"] == "sk-test"
+    assert captured["api_key"] == "sk-test"  # pragma: allowlist secret
     assert captured["base_url"] == "https://example.test/v1"
     assert captured["reasoning"] == {"effort": "medium"}
 
@@ -163,13 +163,13 @@ def test_agnes_and_gemini_clients(monkeypatch) -> None:
 
     get_chat_model("Agnes AI", "agnes-2.5-flash")
     assert openai_kw["model"] == "agnes-2.5-flash"
-    assert openai_kw["api_key"] == "agnes-test"
+    assert openai_kw["api_key"] == "agnes-test"  # pragma: allowlist secret
     assert openai_kw["base_url"] == "https://apihub.agnes-ai.com/v1"
     assert "reasoning" not in openai_kw
 
     get_chat_model("Google", "gemini-3.5-flash-lite", temperature=0.2)
     assert google_kw["model"] == "gemini-3.5-flash-lite"
-    assert google_kw["google_api_key"] == "google-test"
+    assert google_kw["google_api_key"] == "google-test"  # pragma: allowlist secret
     assert google_kw["temperature"] == 0.2
 
     get_chat_model("Google", "gemini-3.7-flash", temperature=0.2)
