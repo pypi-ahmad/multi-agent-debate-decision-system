@@ -26,6 +26,9 @@ wheels/
 htmlcov/
 coverage.xml
 
+# Generated knowledge graphs
+graphify-out/
+
 # Local debate history
 data/debates/*.json
 data/decisions.db

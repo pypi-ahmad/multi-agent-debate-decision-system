@@ -96,6 +96,7 @@ class Turn(TypedDict):
     name: str
     content: str
 
+
 class DebaterSpec(TypedDict, total=False):
     name: str
     style: str
@@ -105,6 +106,7 @@ class DebaterSpec(TypedDict, total=False):
     kind: Literal["agent", "team"]
     members: list[TeamMember]
 
+
 class TeamMember(TypedDict, total=False):
     name: str
     style: str
@@ -113,15 +115,17 @@ class TeamMember(TypedDict, total=False):
     model: str
     is_leader: bool
 
+
 class Verdict(TypedDict, total=False):
     winner: str
     recommendation: str
     rationale: str
     scores: list[SpeechScore]
     outcome: Literal["clear_winner", "consensus", "split"]
-    confidence: int          # 0–100
+    confidence: int  # 0–100
     strongest_arguments: list[str]
     key_risks: list[str]
+
 
 class SpeechScore(TypedDict):
     speaker: str
@@ -129,6 +133,7 @@ class SpeechScore(TypedDict):
     logic: int
     evidence: int
     persuasiveness: int
+
 
 class Document(TypedDict):
     name: str
