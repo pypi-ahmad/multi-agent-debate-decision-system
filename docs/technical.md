@@ -36,14 +36,18 @@ The UI never talks to providers. It calls `advance`.
 
 | Provider | Models | Env | Client |
 | --- | --- | --- | --- |
-| Ollama | `GET {base}/api/tags` | none | `ChatOllama` |
-| OpenAI | `gpt-5.6-luna`; effort `medium` | `OPENAI_API_KEY` + optional `OPENAI_BASE_URL` | `ChatOpenAI` |
-| Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY` | `ChatOpenAI` @ `AGNES_BASE_URL` |
+| Ollama | `GET {base}/api/tags` | none; optional `OLLAMA_BASE_URL` (default `http://localhost:11434`) | `ChatOllama` |
+| OpenAI | `gpt-5.6-luna`; effort `medium` | `OPENAI_API_KEY`; optional `OPENAI_BASE_URL` (default `https://api.openai.com/v1`) | `ChatOpenAI` |
+| Agnes AI | `agnes-2.5-flash` | `AGNES_API_KEY`; optional `AGNES_BASE_URL` (default `https://apihub.agnes-ai.com/v1`) | `ChatOpenAI` @ `AGNES_BASE_URL` |
 | Google | `gemini-3.5-flash-lite`, `gemini-3.7-flash` | `GOOGLE_API_KEY` | `ChatGoogleGenerativeAI` |
 
 `local_only` rewrites every seat and member to Ollama.
 
+> **`gemini-3.7-flash` ignores temperature.** The model does not accept `temperature`, `top_p`, or `top_k`; those parameters are stripped before the request is sent (`config.GOOGLE_NO_SAMPLING`, `llm.py`). The temperature slider has no effect for this model.
+
 Bounds: 2–8 seats, 1–6 rounds, 2–4 team members, temperature 0.0–1.2, speaking order sequential / reverse / random. Ten personas. Timeouts 120s Ollama, 90s hosted.
+
+Defaults: 2 seats, 2 rounds, temperature 0.4, speaking order sequential.
 
 ## Graph
 
@@ -62,6 +66,8 @@ Human inject does not increment `speeches_done`. `request_evidence` retargets `n
 
 Compiled `debate_graph` exists in `graph.py` but the UI steps with `advance()`, not `invoke`.
 
+`judge_node` formats the transcript with `limit=24` (the 24 most recent turns are passed to the judge LLM).
+
 ## Grounding and tools
 
 | Knowledge | Allowed tools |
@@ -69,7 +75,7 @@ Compiled `debate_graph` exists in `graph.py` but the UI steps with `advance()`, 
 | `open` | calculator, code, docs, wikipedia, web_search |
 | `grounded` | calculator, code, docs |
 
-Code is a restricted `ast` math expression (no import, no attributes). Calculator is numbers and `+ - * / ** %`. Wikipedia is the REST summary API. Web search is DuckDuckGo Instant Answer JSON. Docs is keyword overlap plus RAG when enabled.
+Code is a restricted `ast` math expression (no import, no attribute access). Allowed names: all `math` module functions plus `abs`, `min`, `max`, `sum`, `round`, `len`. Calculator is numbers and `+ - * / // ** %` (floor division `//` included). Wikipedia is the REST summary API (`/api/rest_v1/page/summary/{title}`). Web search is DuckDuckGo Instant Answer JSON. Docs is keyword overlap plus RAG when enabled.
 
 In grounded mode, if documents exist and the speech has no `[`, the debater is asked once to cite.
 
@@ -79,9 +85,32 @@ In grounded mode, if documents exist and the speech has no `[`, the debater is a
 
 Pipeline: rewrite query → dense LanceDB search + BM25 → RRF → feature rerank (`llm_rerank` optional) → sentence compression → `[source: type:name#chunk]`.
 
-Store: `data/lancedb/` (`STORE_PATH`). Incremental upsert by content hash. Embeddings: Ollama `RAG_EMBED_MODEL` (default `nomic-embed-text`) or hashed 256-d fallback (`RAG_EMBED_BACKEND=hash`).
+Store: `data/lancedb/` (`STORE_PATH`). Incremental upsert by content hash.
+
+Embeddings (`RAG_EMBED_BACKEND`, default `auto`):
+- `auto` — tries Ollama with `RAG_EMBED_MODEL` (default `nomic-embed-text`); also tries `bge-small` as a fallback Ollama model; falls back to the hashed backend if no Ollama embed model responds.
+- `hash` — always use the deterministic 256-d hashed embedding (no Ollama required; no semantic similarity).
 
 Collections: `session` (this debate’s uploads) vs `longterm` (Knowledge page + indexed decisions). `save_debate` calls `index_decision`. `delete_decision` drops those vectors. Multi-hop follows `decision_links`.
+
+## Personas
+
+Ten built-in personas (`personas.py`). Without an explicit selection, `assign_personas(n)` picks the first `n` in this order:
+
+| # | Name | Style |
+| --- | --- | --- |
+| 1 | Pragmatist | ships the smallest thing that works |
+| 2 | Skeptic | hunts hidden failure modes |
+| 3 | First-principles | rebuilds from constraints |
+| 4 | Devil's advocate | argues the opposite of the room |
+| 5 | Ethicist | tracks stakeholders and second-order harm |
+| 6 | Operator | asks who does the work on Monday |
+| 7 | Optimistic | looks for upside and reversible bets |
+| 8 | Data-driven | demands numbers and base rates |
+| 9 | Risk-averse | minimizes downside and tail risk |
+| 10 | Creative | offers a third option the room did not name |
+
+`select_personas(names)` resolves a list of names; unknown names are silently skipped. Each seat also accepts a per-seat provider and model override.
 
 ## Teams
 
@@ -89,13 +118,22 @@ A seat is `kind=agent` or `kind=team`. Team templates live in `TEAM_TEMPLATES`. 
 
 ## Memory
 
-`save_debate` upserts `decisions` (topic, timestamps, status, recommendation, confidence, outcome, winner, participants, `agent_models`, arguments, transcript text, tags, category, notes, full `state_json`). `decision_links` stores undirected pairs. `search_decisions` uses FTS5 plus `LIKE` fallback.
+`save_debate` upserts `decisions` (topic, timestamps, status, recommendation, confidence, outcome, winner, participants, `agent_models`, arguments, transcript text, tags, category, notes, `archived` flag, full `state_json`). `decision_links` stores undirected pairs. `search_decisions` uses FTS5 plus `LIKE` fallback.
 
-`load_debate` reads SQLite; if missing, it will ingest a leftover `data/debates/<id>.json`.
+Status values: `in_progress`, `decided`, `archived`. The History UI can filter by all three; `archived` debates are hidden from the default view but are not deleted.
+
+`load_debate` reads SQLite; if missing, it ingests a leftover `data/debates/<id>.json` (legacy JSON files from earlier versions are stored there).
 
 ## Analytics
 
 `quality_report` computes participation, Jaccard-style token overlap on consecutive public speeches (flag ≥ 0.55), mean score axes, and a one-paragraph summary. `strength_over_time` averages those means by date. `reset_for_rerun` deep-copies a state, new `debate_id`, empty transcript. `run_until_done` loops `advance` (used by simulation). Win rates come from decided SQLite rows.
+
+## Export
+
+`export.py` provides two functions used by the UI:
+
+- `debate_to_markdown(state)` — full Markdown summary: topic, verdict table, per-speech scores, and full transcript. Available from the Debate page and the History **Export record** button.
+- `timeline_mermaid(state)` — Mermaid sequence diagram of speaker order and roles. Rendered inline on the Debate page after a debate finishes.
 
 ## Quality gates
 
