@@ -1,119 +1,229 @@
-# How to use the debate system
+# How to use
 
-Recipes for common jobs. Internals: [technical.md](technical.md).
+Step-by-step recipes for the Multi-Agent Debate Decision System. For internals see [technical.md](technical.md).
 
-Repo: https://github.com/pypi-ahmad/multi-agent-debate-decision-system
+Repository: <https://github.com/pypi-ahmad/multi-agent-debate-decision-system>
 
-## Run a first debate (Ollama)
+## Requirements
 
-1. Install [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com/). Pull a chat model, e.g. `ollama pull llama3.1:8b`.
-2. Windows: double-click `run.cmd`. Linux: `./run.sh`. Either creates repo-root `.venv` with uv and runs inside it.
-3. Open http://localhost:8522
-4. On **Debate**, turn **Fully local** on. Pick an Ollama model.
-5. Leave Mode on `open`. Seats: 2 agents, 1 round.
-6. Enter a decision question. Click **Start debate**.
+- [uv](https://docs.astral.sh/uv/) 0.11 or later
+- Python 3.11, 3.12, or 3.13 (uv installs it automatically)
+- [Ollama](https://ollama.com/) for fully local models, or an API key for a hosted provider
+- Windows (native cmd/Explorer — not WSL or Docker) or native Linux
 
-You should see moderator and speaker turns, then a **Decision report**.
+## Launch for the first time
 
-Empty model list means Ollama is not reachable at `OLLAMA_BASE_URL` (default `http://localhost:11434`).
+Clone the repository, then run the launcher for your OS.
+
+```bash
+git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
+cd multi-agent-debate-decision-system
+```
+
+| OS | Command |
+| --- | --- |
+| Windows | Double-click `run.cmd` or run it in cmd |
+| Linux | `chmod +x run.sh && ./run.sh` |
+
+The launcher does the following on first run:
+
+1. Installs uv if missing (via the official installer)
+2. Creates `.venv` at the repo root
+3. Syncs all dependencies from the lockfile (`uv sync`)
+4. Copies `.env.example` → `.env` when no `.env` exists
+5. Creates `data/debates/` and `data/lancedb/`
+6. Starts Streamlit at `http://localhost:8522`
+
+Open [http://localhost:8522](http://localhost:8522) in your browser.
+
+> [!IMPORTANT]
+> Do not run inside WSL or Docker — the launchers target native environments only.
+
+On subsequent runs the launcher skips setup steps that are already done and goes straight to launching Streamlit.
+
+## Run your first debate
+
+This route needs no API key.
+
+1. Install a local model: `ollama pull llama3.1:8b`
+2. Start the app
+3. On the **Debate** page, leave **Fully local** toggled on
+4. Pick the model from the dropdown (e.g. `llama3.1:8b`)
+5. Set seats to **2**, rounds to **1**, mode to **open**
+6. Type a decision question in the topic field
+7. Click **Start debate**, then **Step** to advance one turn at a time — or **Run** to run to completion
+
+> [!TIP]
+> If the model dropdown is empty, Ollama is not running or is unreachable at `OLLAMA_BASE_URL` (default `http://localhost:11434`). Start Ollama first.
 
 ## Use a hosted model
 
-1. Copy `.env.example` to `.env`. Fill one key:
+Add your API key to `.env` or your OS environment, then turn **Fully local** off.
 
-   | Provider | Required env | Optional env | Dropdown |
-   | --- | --- | --- | --- |
-   | OpenAI | `OPENAI_API_KEY` | `OPENAI_BASE_URL` — point to any OpenAI-compatible endpoint (default `https://api.openai.com/v1`) | `gpt-5.6-luna` (medium effort) |
-   | Agnes AI | `AGNES_API_KEY` | `AGNES_BASE_URL` — default `https://apihub.agnes-ai.com/v1` | `agnes-2.5-flash` |
-   | Google | `GOOGLE_API_KEY` | — | `gemini-3.5-flash-lite`, `gemini-3.7-flash` |
+| Provider | Env var | Model | Optional base-URL env var | Default base URL |
+| --- | --- | --- | --- | --- |
+| OpenAI | `OPENAI_API_KEY` | `gpt-5.6-luna` | `OPENAI_BASE_URL` | `https://api.openai.com/v1` |
+| Agnes AI | `AGNES_API_KEY` | `agnes-2.5-flash` | `AGNES_BASE_URL` | `https://apihub.agnes-ai.com/v1` |
+| Google | `GOOGLE_API_KEY` | `gemini-3.5-flash-lite` or `gemini-3.7-flash` | — | — |
 
-   > [!NOTE]
-   > `gemini-3.7-flash` does not accept a temperature setting. The temperature slider has no effect for this model.
+OS environment wins over `.env`. Restart the app after editing `.env`.
 
-2. Turn **Fully local** off. Pick that provider. Start.
+> [!WARNING]
+> `gemini-3.7-flash` ignores the temperature slider. Sampling parameters (`temperature`, `top_p`, `top_k`) are stripped automatically. Use `gemini-3.5-flash-lite` if you need temperature control.
 
-## Run a structured decision
+## Run a structured debate
 
-Set Mode to `structured`. The first turns are **Analyst** (options, then pros/cons). Then the hearing and a report with confidence.
+Structured mode adds two pre-debate phases: the moderator enumerates options, then an analyst produces a pros/cons summary, before the hearing begins.
+
+1. Set **Mode** to `structured`
+2. Start the debate
+3. Advance through: **options** → **pros/cons** → **hearing** → **judgment**
+
+Use structured mode when your question has multiple discrete options you want evaluated explicitly before the debate starts.
+
+## Assign specific personas
+
+The app has ten built-in personas. Without explicit selection, `assign_personas` picks the first N in order.
+
+| # | Name | Style |
+| --- | --- | --- |
+| 1 | Pragmatist | ships the smallest thing that works |
+| 2 | Skeptic | hunts hidden failure modes |
+| 3 | First-principles | rebuilds from constraints |
+| 4 | Devil's advocate | argues the opposite of the room |
+| 5 | Ethicist | tracks stakeholders and second-order harm |
+| 6 | Operator | asks who does the work on Monday |
+| 7 | Optimistic | looks for upside and reversible bets |
+| 8 | Data-driven | demands numbers and base rates |
+| 9 | Risk-averse | minimizes downside and tail risk |
+| 10 | Creative | offers a third option the room did not name |
+
+In the **Debate** page, expand the **Seats** section. Each seat shows a persona dropdown — choose one from the list, or leave it for auto-assignment.
+
+Each seat can also override the default provider and model independently, so you can mix Ollama and hosted models in a single debate.
 
 ## Use a team seat
 
-1. Under Seats, set Type to `team`.
-2. Pick Engineering, Product, Business, Security, or Devil's Advocate.
-3. Mark one member as Leader.
+A team seat runs a private huddle among its members before the leader speaks publicly. Huddle turns appear in the transcript with role `huddle` and a combined name (`"Team / PersonaName"`). Only the leader's public speech appears under the team's seat name.
 
-Members huddle in expanders. The public turn is the team name with a **team** badge. You can mix agent seats and team seats.
+1. Set a seat's type to **Team**
+2. Pick a template from the dropdown
 
-## Personas
-
-Ten built-in personas are available. The UI shows a dropdown per seat; without an explicit selection, the first N personas in the list are assigned in order.
-
-| Name | Style |
+| Template | Members (first = leader by default) |
 | --- | --- |
-| Pragmatist | ships the smallest thing that works |
-| Skeptic | hunts hidden failure modes |
-| First-principles | rebuilds from constraints |
-| Devil's advocate | argues the opposite of the room |
-| Ethicist | tracks stakeholders and second-order harm |
-| Operator | asks who does the work on Monday |
-| Optimistic | looks for upside and reversible bets |
-| Data-driven | demands numbers and base rates |
-| Risk-averse | minimizes downside and tail risk |
-| Creative | offers a third option the room did not name |
+| Engineering | Pragmatist, First-principles, Operator |
+| Product | Optimistic, Data-driven, Creative |
+| Business | Pragmatist, Risk-averse, Operator |
+| Security | Skeptic, Risk-averse, First-principles |
+| Devil's Advocate | Devil's advocate, Skeptic, Ethicist |
 
-You can also assign a different provider and model to each seat independently using the per-seat dropdowns in the Seats panel.
+3. Optionally mark a different member as **Leader**
+4. During the debate, the app advances through each huddle member before the leader's public speech
 
 ## Ground speeches in documents
 
-1. Set Knowledge to `grounded`.
-2. Upload `.pdf`, `.md`, `.py`, `.txt`, or a `.zip` of a folder.
-3. Leave **RAG** on if you want LanceDB retrieve plus citations in `tool:rag` turns.
-4. Start. Agents may use **docs**, calculator, and code only. Speeches should include `[source:…]` or `[filename]`.
+Grounded mode restricts tool use to `calculator`, `code`, and `docs` (Wikipedia and web search are blocked), and asks debaters to cite uploaded sources.
 
-**Open** knowledge also allows Wikipedia and DuckDuckGo. Tool results appear as `tool:…` turns.
+1. On the **Debate** page, open the **Knowledge** section
+2. Toggle **Grounded** on
+3. Click **Upload** and add `.pdf`, `.md`, `.py`, `.txt`, or `.zip` files
+4. Start the debate
 
-## Build a long-term knowledge library
+Speeches in grounded mode must include `[source: …]` citations. If a speech has no `[` character, the debater is prompted once to add a citation.
 
-1. Open **Knowledge**.
-2. Upload files and click **Index uploads**.
-3. Use **Search test** to see retrieved chunks and citations.
-4. Check chunk count, source count, and last updated.
+## Build and search the RAG library
 
-Optional: `ollama pull nomic-embed-text` so RAG uses Ollama embeddings instead of the hashed fallback.
+The **Knowledge** page manages a long-term vector library, separate from per-debate uploads.
 
-Debate uploads stay short-term (`session`) unless you index them here (`longterm`).
+1. Open the **Knowledge** page
+2. Upload documents in the **Library** section — these are indexed into the `longterm` LanceDB collection and persist across debates
+3. Use **Search test** to verify a query returns relevant passages before starting a debate
+4. On the Debate page, enable **RAG** — the system retrieves from both the session collection (current debate uploads) and the longterm collection (library + past decisions)
 
-## Pause, inject, demand evidence
+Past decided debates are automatically indexed into `longterm` when saved. Use **Pinned decisions** on the Debate page to include specific past decisions in every RAG query for the current debate.
 
-Pause → **Inject** a human note, or **Ask for evidence** (returns the floor to the last public speaker). **One turn** / **Run remaining** step the graph.
+## Pause and inject a human note
 
-**Pin past decisions into RAG** (sidebar) forces those hearings into retrieve.
+You can pause the debate at any point and inject a message as a human participant.
 
-## Search and continue a past decision
+1. During a debate, click **Pause**
+2. Type your message in the **Inject** field
+3. Click **Inject** — a `human` turn is appended to the transcript
+4. Click **Step** or **Run** to continue
 
-1. Open **Decision history**.
-2. Search (e.g. “Why did we choose SQLite last month?”). Filter status, outcome, date, confidence, tag, category. Status options include `archived`.
-3. **Continue debate** resumes the graph. **Re-run with new settings** clears the transcript and keeps seats.
-4. **Link decisions** ties related hearings.
-5. Open a record to edit its **Notes**, **Tags** (multi-select), and **Category**, then click **Save notes and tags** to persist them to SQLite.
-6. Use the **Archive** / **Unarchive** button to hide a decision from the default view without deleting it.
-7. **Export record** downloads a Markdown summary. The debate page also exports a **Mermaid timeline** diagram alongside the Markdown for finished debates.
+Injected human turns do not increment `speeches_done`, so they do not count toward the round quota.
 
-Storage is local SQLite: `data/decisions.db` (gitignored).
+## Ask a debater for evidence
 
-## Study reasoning patterns
+If you want a debater to support a claim with a citation:
 
-1. Finish at least one debate.
-2. Open **Analytics**.
-3. Read win rates, participation, circular-speech flags, strength over time, and the quality report.
-4. **Run simulation**: pick models and 2–5 runs. Each run is saved in history under a batch id.
+1. After a debater speaks, click **Ask for evidence**
+2. The moderator issues an evidence-request turn targeting the last public debater
+3. That seat takes the next turn and must cite a source, metric, or uploaded document
 
-Simulation calls live models. Keep runs small.
+The evidence request does not count toward `speeches_done` either.
 
-## Developer checks
+## Continue a past debate
 
-```bash
-uv run pytest
-uv run ruff check
-uv run ty check src/
-```
+Every debate is stored in `data/decisions.db` as full state JSON.
+
+1. Open **Decision history**
+2. Search or filter to find the debate (use the search box, outcome filter, status filter, or date range)
+3. Click **Continue debate** — the full `DebateState` is restored from `state_json`
+4. Advance from where it left off
+
+Debates with status `in_progress` can always be continued. Decided debates can also be re-opened and extended.
+
+## Search, tag, and archive past debates
+
+### Search
+
+The search box in **Decision history** runs FTS5 full-text search (AND → OR → LIKE fallback) across topic, recommendation, rationale, arguments, notes, tags, category, and transcript.
+
+### Filters
+
+| Filter | Accepted values |
+| --- | --- |
+| Outcome | `clear_winner`, `consensus`, `split` |
+| Status | `in_progress`, `decided`, `archived` |
+| Since / Until | ISO date `YYYY-MM-DD` |
+| Tag | Any tag string (partial match) |
+| Category | Exact match |
+| Min confidence | 0–100 |
+
+### Tags, category, and notes
+
+Click **Edit** on any history record to add free-text tags, a category label, or notes. All three fields are indexed and searchable.
+
+### Archiving
+
+Click **Archive** to hide a record from the default view (`archived = 1`). Archived debates are not deleted — use the **Archived** status filter to show them. Click **Unarchive** to restore.
+
+### Linking
+
+Use **Link** to create an undirected relationship between two debates. Linked debates are pulled into each other's RAG context when RAG is enabled.
+
+## Export a debate
+
+Two export formats are available from the **Debate** page and the **History** page.
+
+| Export | What you get |
+| --- | --- |
+| **Export record** (Markdown) | Settings, options, pros/cons, full transcript, speech score table, judgment, strongest arguments, key risks |
+| **Mermaid timeline** | `flowchart LR` diagram showing phase order; current phase highlighted in blue |
+
+The Mermaid timeline renders inline in the Debate page after the debate finishes. The Markdown export downloads as a file.
+
+## Read the analytics page
+
+The **Analytics** page shows aggregate stats across all saved debates.
+
+| Metric | What it measures |
+| --- | --- |
+| Win rates | Which seats or personas win most often across `decided` debates |
+| Participation balance | `min / max` speech count per seat — 1.0 means all seats spoke equally |
+| Circular speech flags | Consecutive public speeches with Jaccard token overlap ≥ 0.55 — signals repetition |
+| Strength over time | Mean score (clarity + logic + evidence + persuasiveness ÷ 4) averaged by date |
+| Quality report | Per-debate: participation counts, circular flags, mean score axes, one-paragraph summary |
+
+**Simulation** (in the Analytics page) runs `run_until_done` — loops `advance` without pausing, useful for batch testing persona combinations.
