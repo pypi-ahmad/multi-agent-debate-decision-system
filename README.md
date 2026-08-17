@@ -10,23 +10,37 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-d7ff64?style=flat-square)](https://docs.astral.sh/ruff/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-[Features](#features) · [Getting started](#getting-started) · [Usage](#usage) · [How to use](docs/how-to-use.md)
+**GitHub:** <https://github.com/pypi-ahmad/multi-agent-debate-decision-system>
+
+[Features](#features) · [Getting started](#getting-started) · [Usage](#usage) · [Documentation](#documentation) · [Contributing](#contributing)
 
 </div>
 
-You type a decision question. The app seats personas or **teams**, a **moderator** gives the floor, optional **tools** and **LanceDB RAG** can ground speeches, and a **judge** returns an outcome (`clear_winner` / `consensus` / `split`), a recommendation, confidence, risks, and scores.
+You type a decision question. The app seats AI personas or **teams**, a **moderator** gives the floor, optional **tools** and **LanceDB RAG** can ground speeches in your documents, and a **judge** returns a structured verdict: outcome (`clear_winner` / `consensus` / `split`), a concrete recommendation, confidence score, key risks, and per-speech scores.
 
-Streamlit on port **8522**: Debate, Decision history, Analytics, Knowledge. Package `debate-decision-system` `0.3.0`. Local SQLite + LanceDB. No hosted API, no auth.
+Everything runs on **your** machine — Streamlit UI on port **8522**, four pages (Debate, Decision history, Analytics, Knowledge), local SQLite + LanceDB, no hosted API, no auth. Package `debate-decision-system` `0.3.0`, Python 3.11+.
 
 ```bash
 git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
 ```
 
 > [!TIP]
-> Start with [Ollama](https://ollama.com/) and **Fully local** if you want a run with no API keys.
+> Start with [Ollama](https://ollama.com/) and **Fully local** for a zero-API-key run. `ollama pull llama3.1:8b` is enough.
 
 > [!NOTE]
-> Hearings step with `advance()`, one node at a time, so you can pause, inject a note, or ask for evidence. The UI never builds a provider client.
+> Hearings advance one node at a time with `advance()`, so you can pause, inject a human note, or request evidence mid-debate. The UI never builds a provider client directly.
+
+## Table of Contents
+
+- [Welcome](#welcome)
+- [Disclaimer](#disclaimer)
+- [Features](#features)
+- [Getting started](#getting-started)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Development](#development)
 
 ## Welcome
 
@@ -138,6 +152,34 @@ data/                        SQLite + LanceDB (gitignored)
 ```
 
 Internals: [docs/technical.md](docs/technical.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [Project_Architecture_Blueprint.md](Project_Architecture_Blueprint.md)
+
+## Documentation
+
+All documentation lives in the repository alongside the code.
+
+| File | Contents |
+| --- | --- |
+| [docs/how-to-use.md](docs/how-to-use.md) | Recipes: first debate, hosted keys, team seats, grounded docs, RAG library, pause/inject, history, analytics, personas |
+| [docs/technical.md](docs/technical.md) | Internals: graph execution, providers, tools, RAG pipeline, memory schema, analytics, export |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Comprehensive cited architecture document with C4 diagrams, ADRs, and subsystem deep-dives |
+| [Project_Architecture_Blueprint.md](Project_Architecture_Blueprint.md) | Extended architecture blueprint and design decisions |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: setup, checks, PR workflow, ground rules |
+| [SECURITY.md](SECURITY.md) | Security model, what to report, and how to report it privately |
+| [SUPPORT.md](SUPPORT.md) | Common stuck points, where to ask questions, and community guidelines |
+| [DISCLAIMER.md](DISCLAIMER.md) | Data responsibility, no-warranty statement, API key ownership |
+| [CHANGELOG.md](CHANGELOG.md) | Version history (if present) |
+
+## Contributing
+
+Contributions of any kind are welcome — bug reports, feature ideas, documentation fixes, new personas, test improvements, and code changes all help.
+
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow, checks, and ground rules.
+- Use the [bug report template](https://github.com/pypi-ahmad/multi-agent-debate-decision-system/issues/new?template=bug_report.md) or [feature request template](https://github.com/pypi-ahmad/multi-agent-debate-decision-system/issues/new?template=feature_request.md) on GitHub Issues.
+- Good first contributions: new personas (`personas.py`), doc fixes, test coverage, RAG improvements.
+
+**No financial support needed or wanted.** The project is free. The author does not accept donations, sponsorships, or any form of financial contribution. The best way to give back is a useful issue or a well-tested pull request.
+
+For help, see [SUPPORT.md](SUPPORT.md). For data responsibility, see [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Development
 

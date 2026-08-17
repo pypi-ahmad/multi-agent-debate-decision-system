@@ -1,32 +1,41 @@
 ---
 name: Feature request
-about: Suggest an idea that fits this local debate app
+about: Suggest an idea or improvement for this local debate app
 title: "[feat] "
 labels: enhancement
 assignees: []
 ---
 
-Thanks for the idea. Concrete proposals that fit a **local** Streamlit + LangGraph app are the most useful.
+Feature ideas are welcome — this is how the project improves. The more concrete and scoped the proposal, the easier it is to evaluate and implement.
 
 ## Problem
 
-What is hard or missing today?
+What is hard, missing, or frustrating today? Concrete examples help.
 
-## Proposal
+## Proposed solution
 
-What should the app do instead? Keep it concrete.
+What should the app do differently? Keep it specific — what would change in the UI or behavior?
 
-## Why here
+## Who does this help?
 
-Does this belong in the local app, or is it a new product?
+Is this for a particular workflow, debate mode, or type of user? More context means a better decision.
 
-## Out of scope (please do not ask)
+## Alternatives considered
 
-- Hosted multi-user service or authentication
-- Donation, sponsorship, or payment features
-- Changing the locked provider model lists without a strong reason
-- Unrestricted code execution
+Other approaches you thought about and why they did not feel right.
 
-## Extra
+## Does it belong here?
 
-Any file or page you already looked at (`app_pages/…`, `graph.py`, …).
+This is a **local** Streamlit + LangGraph app. Check that your idea fits:
+
+- Runs on the user's own machine (no hosted service, no auth layer)
+- Uses existing providers (Ollama local tags, or BYOK for OpenAI / Agnes AI / Google)
+- Does not add unrestricted code execution
+- Does not add donation, sponsorship, or payment features
+
+## Relevant files (optional)
+
+Any file or page you already looked at — `app_pages/…`, `graph.py`, `agents/`, `rag/`, etc.
+
+> [!NOTE]
+> This project has no paid roadmap or guaranteed delivery timeline. Features are implemented when time and community interest align. The more detail and context you provide, the easier it is to act on your request.

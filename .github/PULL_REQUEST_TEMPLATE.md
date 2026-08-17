@@ -1,20 +1,43 @@
-## What
+## What this does
 
-A few sentences. Link the issue if there is one.
+A short description of the change — what was added, fixed, or improved.
 
 ## Why
 
-## How to check
+Link to the issue or explain why this matters if there is no issue. For obvious fixes, one sentence is fine.
 
-- [ ] `uv run ruff check` and `uv run ruff format --check`
-- [ ] `uv run ty check src/`
-- [ ] `uv run pytest` (coverage ≥ 80%)
-- [ ] No `.env`, `data/decisions.db`, or `data/lancedb/` in the diff
-- [ ] Provider model lists and env-only keys unchanged (unless the issue is about them)
-- [ ] I did not add donation, sponsorship, or payment machinery
+## Type
 
-## Notes
+- [ ] Bug fix
+- [ ] Feature
+- [ ] Documentation
+- [ ] Test coverage
+- [ ] Refactor / code quality
+- [ ] New persona
+- [ ] RAG improvement
+- [ ] Other
 
-Anything a reviewer should not miss.
+## Checklist
 
-By opening this PR you agree the change stays MIT-licensed and that testers run it on their own machines with their own keys. See [DISCLAIMER.md](DISCLAIMER.md).
+- [ ] `make lint` passes (`ruff format --check`, `ruff check`, `ty check src/`)
+- [ ] `make test` passes (coverage ≥ 80%)
+- [ ] Tests use fake chat clients — no live LLM calls added
+- [ ] No new unrestricted `exec` / `eval` / shell execution
+- [ ] No API keys or secrets committed
+- [ ] No donation, sponsorship, or payment features added
+- [ ] Docs updated if behavior changed (`docs/how-to-use.md`, `docs/technical.md`)
+
+## Testing notes
+
+How you verified the change works — manual run, new test, or both.
+
+## Breaking changes
+
+Any API or behavior change that could affect an existing setup. Leave blank if none.
+
+---
+
+> [!NOTE]
+> This project runs locally on the reviewer's machine. If you added a new provider, model, or env var, make sure it appears in [docs/technical.md](../docs/technical.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
+>
+> All data processed by this app is 100% the user's responsibility — see [DISCLAIMER.md](../DISCLAIMER.md).
