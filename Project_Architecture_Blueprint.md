@@ -1,8 +1,8 @@
 # Project Architecture Blueprint
 
-**Project:** Multi-Agent Debate Decision System (`debate-decision-system` `0.3.0`)  
-**Generated:** 2026-08-16 from files on disk  
-**License:** MIT  
+**Project:** Multi-Agent Debate Decision System (`debate-decision-system` `0.3.0`)
+**Generated:** 2026-08-16 from files on disk
+**License:** MIT
 **Companion maps:** [ARCHITECTURE.md](ARCHITECTURE.md) (earlier checkout snapshot — some claims there are stale), [docs/technical.md](docs/technical.md) (current layer table)
 
 This blueprint is a consistency guide. Prefer this file plus the current source over older architecture notes when they disagree.
