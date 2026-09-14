@@ -29,7 +29,7 @@ Link to the issue or explain why this matters if there is no issue. For obvious 
 
 ## Testing notes
 
-How you verified the change works — manual run, new test, or both.
+How you verified the change works: manual run, new test, or both.
 
 ## Breaking changes
 
@@ -40,4 +40,4 @@ Any API or behavior change that could affect an existing setup. Leave blank if n
 > [!NOTE]
 > This project runs locally on the reviewer's machine. If you added a new provider, model, or env var, make sure it appears in [docs/technical.md](../docs/technical.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
 >
-> All data processed by this app is 100% the user's responsibility — see [DISCLAIMER.md](../DISCLAIMER.md).
+> All data processed by this app is 100% the user's responsibility. See [DISCLAIMER.md](../DISCLAIMER.md).

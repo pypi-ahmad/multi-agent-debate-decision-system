@@ -6,7 +6,7 @@ labels: enhancement
 assignees: []
 ---
 
-Feature ideas are welcome — this is how the project improves. The more concrete and scoped the proposal, the easier it is to evaluate and implement.
+Feature ideas are welcome. This is how the project improves. The more concrete and scoped the proposal, the easier it is to evaluate and implement.
 
 ## Problem
 
