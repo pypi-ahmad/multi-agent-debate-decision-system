@@ -18,7 +18,7 @@ Do not feed the app secrets, personal data, or confidential files unless you acc
 
 The app has **no authentication**. Anyone who can reach your Streamlit port can use that session. Do not expose port **8522** to the internet.
 
-Outputs (including “confidence,” winners, and recommendations) are generated text. They are not legal, medical, financial, or professional advice. You decide what to do with them.
+Outputs (including "confidence," winners, and recommendations) are generated text. They are not legal, medical, financial, or professional advice. You decide what to do with them.
 
 ## Money
 

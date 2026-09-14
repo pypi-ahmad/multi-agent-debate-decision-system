@@ -2,21 +2,21 @@
 
 This project is free and community-driven. You run it yourself, on your machine, with your own keys.
 
-There is no paid support line. **No donations or sponsorship** — please do not offer money.
+There is no paid support line. **No donations or sponsorship**: please do not offer money.
 
 ## Help yourself first
 
-1. [README.md](README.md) — what the app is and how to start
-2. [docs/how-to-use.md](docs/how-to-use.md) — recipes (Ollama, hosted keys, teams, grounding, RAG, history)
-3. [docs/technical.md](docs/technical.md) — graph, tools, RAG, SQLite memory
-4. [DISCLAIMER.md](DISCLAIMER.md) — your data and your keys
+1. [README.md](README.md): what the app is and how to start
+2. [docs/how-to-use.md](docs/how-to-use.md): recipes (Ollama, hosted keys, teams, grounding, RAG, history)
+3. [docs/technical.md](docs/technical.md): graph, tools, RAG, SQLite memory
+4. [DISCLAIMER.md](DISCLAIMER.md): your data and your keys
 
 ## Common stuck points
 
 | Symptom | Check |
 | --- | --- |
 | Empty Ollama model list | Is the daemon up? Default `OLLAMA_BASE_URL` is `http://localhost:11434`. |
-| “API key is not set” | Copy `.env.example` to `.env` and fill **your** key. OS env wins over the file. |
+| "API key is not set" | Copy `.env.example` to `.env` and fill **your** key. OS env wins over the file. |
 | `uv sync` failed | Read the error above the prompt. `run.cmd` / `./run.sh` stop if first-time install fails. |
 | App not on 8522 | Use `run.cmd` (Windows) or `./run.sh` (Linux). Port is in `.streamlit/config.toml`. |
 | No history rows | Run a debate first. Decisions live in local `data/decisions.db`. |
@@ -24,10 +24,10 @@ There is no paid support line. **No donations or sponsorship** — please do not
 
 ## Ask the community
 
-- Usage questions → a GitHub Discussion if enabled, otherwise an issue labeled as a question
-- Bugs → [bug report](.github/ISSUE_TEMPLATE/bug_report.md)
-- Ideas → [feature request](.github/ISSUE_TEMPLATE/feature_request.md)
-- Security → [SECURITY.md](SECURITY.md) (private advisory, not a public issue)
+- Usage questions: post a GitHub Discussion if enabled, otherwise open an issue labeled as a question
+- Bugs: use the [bug report](.github/ISSUE_TEMPLATE/bug_report.md) template
+- Ideas: use the [feature request](.github/ISSUE_TEMPLATE/feature_request.md) template
+- Security: see [SECURITY.md](SECURITY.md) for the private advisory process, not a public issue
 
 The maintainer is a volunteer. Be kind. Include OS, Python version, how you launched the app, and the command you ran. Redact API keys.
 
