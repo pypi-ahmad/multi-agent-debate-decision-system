@@ -65,6 +65,8 @@ def debater_node(state: DebateState) -> dict:
         temp = float(state.get("temperature", 0.4))
         llm = get_chat_model(provider, model, temperature=temp)
         content = message_text(llm.invoke([("system", system), ("human", human)]))
+        # One retry only, not a loop: if the second attempt still lacks a
+        # citation it is accepted as-is rather than blocking the debate.
         if (
             state.get("grounding") == "grounded"
             and (state.get("documents") or [])

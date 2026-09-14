@@ -13,7 +13,7 @@ from typing import Any, cast
 from debate_decision_system.graph import debate_done
 from debate_decision_system.state import DebateState
 
-_OVERLAP_FLAG = 0.55
+_OVERLAP_FLAG = 0.55  # empirical Jaccard threshold for "these two speeches restate each other"
 
 
 def token_overlap(left: str, right: str) -> float:
@@ -128,6 +128,10 @@ def quality_report(state: DebateState) -> dict[str, Any]:
 def reset_for_rerun(
     state: DebateState, *, model: str | None = None, batch_id: str | None = None
 ) -> DebateState:
+    """Clone a finished debate back to a fresh, unstarted state, keeping the
+    same topic/personas/settings. Used by app_pages/analytics.py to compare
+    outcomes across models: pass `model` to swap every seat onto it and
+    `batch_id` to group the resulting runs in decision history."""
     fresh = cast(DebateState, copy.deepcopy(dict(state)))
     fresh["debate_id"] = uuid.uuid4().hex[:12]
     fresh["transcript"] = []
@@ -160,6 +164,8 @@ def run_until_done(
     *,
     limit: int = 80,
 ) -> DebateState:
+    # limit is a circuit breaker against a stuck/looping advance_fn, not an
+    # expected debate length (rounds x debaters is normally well under this).
     current = state
     for _ in range(limit):
         if debate_done(current):

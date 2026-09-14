@@ -167,13 +167,13 @@ tools → huddle → debater → moderator
 judge → END
 ```
 
-`debate_graph = build_graph()` compiles the graph at import time. The UI does not call `debate_graph.invoke` — it calls `advance()` one step at a time.
+`debate_graph = build_graph()` compiles the graph at import time. The UI does not call `debate_graph.invoke`; it calls `advance()` one step at a time.
 
 ### `next_action(state) → str`
 
 Determines which node to call next without mutating state. Rules in order:
 
-1. `debate_done(state)` → `"end"` — verdict present, or last turn role is `"judge"`
+1. `debate_done(state)` → `"end"` (verdict present, or last turn role is `"judge"`)
 2. `phase == "options"` → `"options"`
 3. `phase == "pros_cons"` → `"pros_cons"`
 4. `phase == "judge"` → `"judge"`
@@ -222,7 +222,7 @@ Each node returns a `dict` of state updates. `apply_update` merges them, appendi
 | `web_search` | open only | DuckDuckGo Instant Answer JSON (`api.duckduckgo.com`) | 2 per turn |
 | `docs` | open + grounded | `retrieve()` keyword overlap + RAG when enabled | 2 per turn |
 
-`GROUNDED_TOOLS = frozenset({"calculator", "code", "docs"})` — `wikipedia` and `web_search` are blocked when `grounding == "grounded"`.
+`GROUNDED_TOOLS = frozenset({"calculator", "code", "docs"})`. `wikipedia` and `web_search` are blocked when `grounding == "grounded"`.
 
 `tools_node` calls `plan_tools` (structured output → `ToolPlan`) then `run_tool_calls` (capped at 2). After tool turns, if `rag_enabled`, `_rag_citation_turn` appends a `tool:rag` turn from `context_for_state`.
 
@@ -265,17 +265,17 @@ A seat with `kind == "team"` runs a private huddle before its public speech. `pu
 
 ### Chunking
 
-Source text is split at paragraph boundaries. `CHUNK_SIZE = 700` characters, `CHUNK_OVERLAP = 100`. Content hash (Blake2b-128) is used for incremental upsert — unchanged chunks are not re-embedded.
+Source text is split at paragraph boundaries. `CHUNK_SIZE = 700` characters, `CHUNK_OVERLAP = 100`. Content hash (Blake2b-128) is used for incremental upsert; unchanged chunks are not re-embedded.
 
 ### Pipeline (`rag/pipeline.py`)
 
 `context_for_state(state) → RagResult`:
 
-1. **Rewrite** — `rewrite_query` reformulates the topic for retrieval quality.
-2. **Hybrid search** — `hybrid_search` combines dense LanceDB vector search with BM25 keyword search, fused with Reciprocal Rank Fusion (RRF).
-3. **Rerank** — feature-based `rerank`; optional `llm_rerank` for deeper scoring.
-4. **Compress** — `compress` trims each passage to the most relevant sentences.
-5. **Cite** — `citation_for(chunk)` produces `[source: type:name#chunk_index]`.
+1. **Rewrite**: `rewrite_query` reformulates the topic for retrieval quality.
+2. **Hybrid search**: `hybrid_search` combines dense LanceDB vector search with BM25 keyword search, fused with Reciprocal Rank Fusion (RRF).
+3. **Rerank**: feature-based `rerank`; optional `llm_rerank` for deeper scoring.
+4. **Compress**: `compress` trims each passage to the most relevant sentences.
+5. **Cite**: `citation_for(chunk)` produces `[source: type:name#chunk_index]`.
 
 Results are pulled from both `session` (current debate uploads) and `longterm` (Knowledge library + indexed decisions) collections.
 
@@ -288,7 +288,7 @@ Results are pulled from both `session` (current debate uploads) and `longterm` (
 
 `delete_decision(debate_id)` calls `delete_source("decision", debate_id)` to remove those vectors from `longterm`.
 
-Multi-hop context follows `decision_links` — linked decisions are included in the RAG context.
+Multi-hop context follows `decision_links`; linked decisions are included in the RAG context.
 
 ### Embeddings (`rag/embeddings.py`)
 
@@ -297,7 +297,7 @@ Multi-hop context follows `decision_links` — linked decisions are included in 
 | Value | Behaviour |
 | --- | --- |
 | `auto` | Tries Ollama with `RAG_EMBED_MODEL` (default `nomic-embed-text`); also tries `bge-small` as a fallback; falls back to hashed backend if no embed model responds |
-| `hash` | Always uses deterministic 256-d hashed embeddings — no Ollama required, no semantic similarity |
+| `hash` | Always uses deterministic 256-d hashed embeddings; no Ollama required, no semantic similarity |
 
 Vector store path: `data/lancedb/` (`STORE_PATH`).
 
@@ -321,7 +321,7 @@ Database: `data/decisions.db` (SQLite). Created automatically on first `save_deb
 | `outcome` | TEXT | `clear_winner` \| `consensus` \| `split` |
 | `winner` | TEXT | Winning seat name |
 | `participants` | TEXT | JSON list of seat names |
-| `agent_models` | TEXT | JSON dict — `"seat" → "provider/model"` |
+| `agent_models` | TEXT | JSON dict: `"seat" → "provider/model"` |
 | `key_arguments` | TEXT | JSON list (for + against combined) |
 | `arguments_for` | TEXT | JSON list from `verdict.strongest_arguments` |
 | `arguments_against` | TEXT | JSON list from `verdict.key_risks` |
@@ -331,9 +331,9 @@ Database: `data/decisions.db` (SQLite). Created automatically on first `save_deb
 | `category` | TEXT | |
 | `notes` | TEXT | |
 | `archived` | INTEGER | `0` or `1`; default `0` |
-| `state_json` | TEXT NOT NULL | Full `DebateState` JSON — enables full resume |
+| `state_json` | TEXT NOT NULL | Full `DebateState` JSON; enables full resume |
 
-`decision_links`: undirected pairs `(left_id, right_id)` — primary key is the sorted pair.
+`decision_links`: undirected pairs `(left_id, right_id)`; primary key is the sorted pair.
 
 `decisions_fts` (FTS5 virtual table): `debate_id UNINDEXED`, `topic`, `recommendation`, `rationale`, `arguments`, `notes`, `participants`, `tags`, `category`, `transcript`.
 
@@ -355,7 +355,7 @@ Status is set to `"decided"` when the verdict has a recommendation or winner, or
 
 ## Analytics
 
-All functions are pure — they read state but do not mutate it.
+All functions are pure; they read state but do not mutate it.
 
 | Function | Purpose | Key detail |
 | --- | --- | --- |
@@ -381,7 +381,7 @@ Circular speech flag threshold: `_OVERLAP_FLAG = 0.55`.
 
 ## Configuration reference
 
-All constants are in `config.py`. Functions (e.g. `openai_api_key()`) read live env vars at call time; module-level names (e.g. `OPENAI_API_KEY`) are snapshots at import time — prefer the functions in application code.
+All constants are in `config.py`. Functions (e.g. `openai_api_key()`) read live env vars at call time; module-level names (e.g. `OPENAI_API_KEY`) are snapshots at import time; prefer the functions in application code.
 
 | Constant | Default | Notes |
 | --- | --- | --- |
@@ -428,7 +428,7 @@ uv run ty check src/
 uv run pytest
 ```
 
-Coverage must stay at or above **80%**. Tests use fake chat clients — do not add live-LLM end-to-end tests.
+Coverage must stay at or above **80%**. Tests use fake chat clients; do not add live-LLM end-to-end tests.
 
 CI runs on every push/PR to `main`: frozen `uv sync`, quality (Ruff + ty + pytest), hooks (pre-commit).
 

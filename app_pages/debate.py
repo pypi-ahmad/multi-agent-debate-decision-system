@@ -1,5 +1,11 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""Debate workspace."""
+"""Debate workspace: build a hearing's settings, run it turn by turn, show results.
+
+This module owns Streamlit widget state and calls into graph.py's advance()
+one step at a time; it must not itself decide debate routing (that belongs in
+graph.py's next_action()) or talk to a provider SDK directly (that belongs in
+llm.py). See history.py next for how a saved debate is resumed from here.
+"""
 
 from __future__ import annotations
 
@@ -87,6 +93,10 @@ def _providers_missing(providers: set[str]) -> str | None:
 
 
 def _sync(state: DebateState) -> None:
+    """Bridge the two places a debate lives: st.session_state (this browser
+    tab's live, in-progress mirror) and SQLite via save_debate() (the durable
+    store). Call this after every state change so a page reload/rerun can
+    still find the debate and Decision history stays current mid-run."""
     st.session_state.debate = state
     st.session_state.transcript = list(state.get("transcript") or [])
     st.session_state.verdict = dict(state.get("verdict") or {})
@@ -220,6 +230,9 @@ with st.sidebar:
     seats: list[dict] = []
     used_providers: set[str] = {default_provider}
     team_names = list(TEAM_TEMPLATES)
+    # Every widget key below is built from the seat index i (and member index j)
+    # so it stays a stable, unique Streamlit state identity across reruns —
+    # reordering or reusing these keys would cross-contaminate seats' widgets.
     with st.expander("Seats", expanded=True):
         for i in range(debater_count):
             st.markdown(f"**Seat {i + 1}**")
@@ -329,6 +342,9 @@ with st.sidebar:
             st.session_state.auto_run = False
             st.rerun()
         pin_labels = [f"{row['debate_id']} — {row['topic'][:48]}" for row in past[:20]]
+        # This selection only takes effect when "Start debate" builds a new
+        # initial_state() below — pinning has no effect on an already-running
+        # debate since pinned_ids isn't re-read mid-run.
         pinned = st.multiselect(
             "Pin past decisions into RAG",
             pin_labels,
@@ -448,6 +464,10 @@ if running and debate is not None:
             _sync(request_evidence(debate))
             st.rerun()
 
+# "Run remaining" has no background loop or async task: each script rerun
+# advances exactly one node, then immediately triggers the next rerun via
+# st.rerun(). The animation of a hearing "playing out" is this rerun-per-step
+# cycle, one HTTP round trip at a time, until debate_done() or Pause is clicked.
 if st.session_state.auto_run and debate is not None and not debate_done(debate):
     _sync(advance(debate))
     if debate_done(st.session_state.debate):

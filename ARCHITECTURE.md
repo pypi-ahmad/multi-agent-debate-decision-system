@@ -1,6 +1,6 @@
-# Architecture — Multi-Agent Debate Decision System
+# Architecture: Multi-Agent Debate Decision System
 
-Cited snapshot of the **local checkout**, not GitHub `main` as advertised remotely.
+Cited snapshot of the local checkout, not GitHub `main` as advertised remotely.
 
 | Field | Value |
 | --- | --- |
@@ -11,11 +11,11 @@ Cited snapshot of the **local checkout**, not GitHub `main` as advertised remote
 | Package | `debate-decision-system` `0.3.0` ([`src/debate_decision_system/__init__.py`](src/debate_decision_system/__init__.py#L8)) |
 | License | MIT ([`LICENSE`](LICENSE#L1)) |
 
-This document describes **files on disk now**, including uncommitted memory work.
+This document describes files on disk now, including uncommitted memory work.
 
 ---
 
-## Part 1 — Whole-repo technical deep-dive
+## Part 1: Whole-repo technical deep-dive
 
 ### What this repository is
 
@@ -53,7 +53,7 @@ No auth. No hosted API. No vector index. No CLI that runs a debate ([`docs/techn
 | Linux launcher | [`run.sh`](run.sh) | Native Linux. Same `.venv` flow; official `uv/install.sh` if uv missing |
 | Compiled graph | `debate_graph = build_graph()` | Exists ([`graph.py#L61`](src/debate_decision_system/graph.py#L61)). Live UI path is `advance()`, not `debate_graph.invoke` ([`graph.py#L240-L256`](src/debate_decision_system/graph.py#L240)). |
 
-### Commands & Verification Inventory
+### Commands & verification inventory
 
 Verified against [`Makefile`](Makefile), [`pyproject.toml`](pyproject.toml), [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Ran this session (no Streamlit launch).
 
@@ -77,7 +77,7 @@ Verified against [`Makefile`](Makefile), [`pyproject.toml`](pyproject.toml), [`.
 
 **Observed this session:** `uv sync --frozen` ok; ruff check/format pass; ty pass; **33** pytest tests pass; coverage **82.07%** (floor 80); pip-audit clean. Streamlit process **not** started (session rule).
 
-**CI enforcement** (required status check / branch protection): `[UNVERIFIED]` — cannot read GitHub branch-protection from disk.
+**CI enforcement** (required status check / branch protection): `[UNVERIFIED]`. Cannot read GitHub branch-protection from disk.
 
 ### Directory layout
 
@@ -94,7 +94,7 @@ Verified against [`Makefile`](Makefile), [`pyproject.toml`](pyproject.toml), [`.
 | `.streamlit/` | Port 8522 |
 | `dist/` | Built 0.3.0 artifacts (present on disk) |
 
-### Deployment & Runtime Surface
+### Deployment & runtime surface
 
 | Pin | Value | Evidence |
 | --- | --- | --- |
@@ -153,7 +153,7 @@ One workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml): `push` to `
 
 ---
 
-## Part 2 — Context & ecosystem
+## Part 2: Context & ecosystem
 
 ### Agent / contributor docs on disk
 
@@ -184,13 +184,13 @@ Single deployable: local Streamlit + local SQLite. Optional daemons: Ollama, hos
 
 ---
 
-## Part 3 — Architectural blueprint
+## Part 3: Architectural blueprint
 
 ### Pattern
 
 **Modular local monolith.** Presentation (`app.py` / `app_pages/`) → orchestration (`graph.advance`) → nodes (`agents/`, `tools.py`) → I/O (`llm.py`, `memory.py`, `documents.py`). UI never constructs a provider client.
 
-### C4 — Level 1 system context
+### C4: Level 1 system context
 
 ```mermaid
 C4Context
@@ -208,7 +208,7 @@ C4Context
   Rel(app, ddg, "snippets if open")
 ```
 
-### C4 — Level 2 containers
+### C4: Level 2 containers
 
 ```mermaid
 flowchart TB
@@ -222,7 +222,7 @@ flowchart TB
   PKG -->|ChatOllama / ChatOpenAI / Gemini| NET[HTTPS / localhost]
 ```
 
-### C4 — Level 3 one step
+### C4: Level 3 one step
 
 ```mermaid
 sequenceDiagram
@@ -268,12 +268,12 @@ sequenceDiagram
 
 ### Inferred ADRs
 
-1. **Stepwise `advance()` over one-shot graph invoke** — UI can pause, inject, huddle one member per rerun ([`graph.py#L214-L256`](src/debate_decision_system/graph.py#L214)).
-2. **SQLite file, not a server** — local-first, no auth ([`memory.py#L18`](src/debate_decision_system/memory.py#L18)).
-3. **Keyword retrieve, not vectors** — stated in module docstring ([`retrieve.py#L1-L2`](src/debate_decision_system/retrieve.py#L1)).
-4. **Restricted AST math, not sandbox VM** — ([`tools.py#L55-L62`](src/debate_decision_system/tools.py#L55)).
-5. **Structured judge output via Pydantic** — ([`judge.py#L21-L36`](src/debate_decision_system/agents/judge.py#L21)).
-6. **history.py is a re-export shim** — ([`history.py`](src/debate_decision_system/history.py)).
+1. **Stepwise `advance()` over one-shot graph invoke**: UI can pause, inject, huddle one member per rerun ([`graph.py#L214-L256`](src/debate_decision_system/graph.py#L214)).
+2. **SQLite file, not a server**: local-first, no auth ([`memory.py#L18`](src/debate_decision_system/memory.py#L18)).
+3. **Keyword retrieve, not vectors**: stated in module docstring ([`retrieve.py#L1-L2`](src/debate_decision_system/retrieve.py#L1)).
+4. **Restricted AST math, not sandbox VM**: ([`tools.py#L55-L62`](src/debate_decision_system/tools.py#L55)).
+5. **Structured judge output via Pydantic**: ([`judge.py#L21-L36`](src/debate_decision_system/agents/judge.py#L21)).
+6. **history.py is a re-export shim**: ([`history.py`](src/debate_decision_system/history.py)).
 
 ### Governance
 
@@ -368,7 +368,7 @@ Analytics: Jaccard-style overlap flag ≥ 0.55 ([`analytics.py#L16`](src/debate_
 
 ---
 
-## Footnotes — local files
+## Footnotes: local files
 
 | File | Establishes |
 | --- | --- |

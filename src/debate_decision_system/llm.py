@@ -16,7 +16,12 @@ from debate_decision_system import config
 
 
 def message_text(message: BaseMessage) -> str:
-    """Flatten a chat result to plain text."""
+    """Flatten a chat result to plain text.
+
+    `.content` shape varies by provider/langchain version: a plain string, or a
+    list of content blocks (e.g. reasoning + text parts). Normalize here so
+    every caller can treat a chat response as a single string.
+    """
     text = getattr(message, "text", None)
     if isinstance(text, str) and text.strip():
         return text.strip()
@@ -74,6 +79,8 @@ def _google_chat(model: str, temperature: float) -> BaseChatModel:
         "google_api_key": _require_key(config.google_api_key(), "GOOGLE_API_KEY"),
         "timeout": config.REASONING_TIMEOUT_SECONDS,
     }
+    # Some Gemini models (config.GOOGLE_NO_SAMPLING) reject sampling params outright,
+    # so temperature is only attached when the model is known to accept it.
     if model not in config.GOOGLE_NO_SAMPLING:
         kwargs["temperature"] = temperature
     return ChatGoogleGenerativeAI(**kwargs)

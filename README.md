@@ -14,7 +14,7 @@
 
 </div>
 
-You type a decision question. The system seats AI personas or **teams**, a **moderator** gives the floor, optional **tools** and **LanceDB RAG** can ground speeches in your documents, and a **judge** returns a structured verdict — outcome (`clear_winner` / `consensus` / `split`), a concrete recommendation, a confidence score (0–100), key risks, and per-speech scores across clarity, logic, evidence, and persuasiveness.
+You type a decision question. The system seats AI personas or **teams**, a moderator gives the floor, optional tools and LanceDB RAG can ground speeches in your documents, and a judge returns a structured verdict: outcome (`clear_winner` / `consensus` / `split`), a concrete recommendation, a confidence score (0–100), key risks, and per-speech scores across clarity, logic, evidence, and persuasiveness.
 
 Everything runs on **your** machine. Streamlit UI on port **8522**, four pages (Debate, Decision history, Analytics, Knowledge), local SQLite + LanceDB, no hosted service, no auth. Package `debate-decision-system` `0.3.0`, Python 3.11+.
 
@@ -36,9 +36,9 @@ git clone https://github.com/pypi-ahmad/multi-agent-debate-decision-system.git
 
 ## Welcome
 
-This project is **free**, MIT-licensed, and community-driven. Clone it, run it, file bugs, suggest features, send pull requests.
+This project is **free**, MIT-licensed, and community-driven. Clone it, run it, file bugs, suggest features, or send pull requests.
 
-**You run everything on your machine** with **your** Ollama models or **your** API keys. Your data never leaves your machine unless you choose a hosted provider.
+You run everything on your machine, using your own Ollama models or API keys. Your data never leaves your machine unless you choose a hosted provider.
 
 **Please do not send money.** Donations and sponsorship are not needed or wanted. A useful issue or a well-tested PR is more than enough.
 
@@ -47,7 +47,7 @@ How-to and help: [docs/how-to-use.md](docs/how-to-use.md) · [SUPPORT.md](SUPPOR
 ## Disclaimer
 
 > [!CAUTION]
-> **All data processed by this app is 100% your responsibility** — questions, uploaded documents, `data/decisions.db`, `data/lancedb/`, and anything sent to Ollama, OpenAI, Agnes AI, Google, Wikipedia, or DuckDuckGo.
+> **All data processed by this app is 100% your responsibility**: questions, uploaded documents, `data/decisions.db`, `data/lancedb/`, and anything sent to Ollama, OpenAI, Agnes AI, Google, Wikipedia, or DuckDuckGo.
 
 Software is provided **as is**, without warranty. Outputs are not professional advice. Do not expose port **8522** to a network. Full text: [DISCLAIMER.md](DISCLAIMER.md).
 
@@ -56,7 +56,7 @@ Software is provided **as is**, without warranty. Outputs are not professional a
 **Debate engine**
 - Open mode: moderator gives the floor directly after startup
 - Structured mode: options enumeration → pros/cons analysis → hearing → judgment
-- Hearing advances one node at a time via `advance()` — pause, inject a human note, or ask for evidence at any point
+- Hearing advances one node at a time via `advance()`: pause, inject a human note, or ask for evidence at any point
 
 **Seats and personas**
 - 2–8 seats, 1–6 rounds, temperature 0.0–1.2, speaking order sequential/reverse/random
@@ -67,7 +67,7 @@ Software is provided **as is**, without warranty. Outputs are not professional a
 
 **Tools and grounding**
 - Open mode: calculator, code (restricted math), docs, Wikipedia, DuckDuckGo web search
-- Grounded mode: calculator, code, docs only — speeches must cite `[source: …]`
+- Grounded mode: calculator, code, docs only. Speeches must cite `[source: …]`
 - LanceDB hybrid RAG: dense + BM25, RRF fusion, rerank, sentence compression, per-chunk citations
 - RAG embed backends: `auto` (Ollama nomic-embed-text → bge-small → hash fallback) or `hash`
 
@@ -136,7 +136,7 @@ ollama pull llama3.1:8b        # any local chat model works
 OS env wins over `.env`.
 
 > [!NOTE]
-> `gemini-3.7-flash` does not accept sampling parameters — temperature is stripped silently. Use `gemini-3.5-flash-lite` if the temperature slider matters.
+> `gemini-3.7-flash` does not accept sampling parameters. Temperature is stripped silently. Use `gemini-3.5-flash-lite` if the temperature slider matters.
 
 ### Common tasks
 
@@ -202,7 +202,7 @@ All documentation lives in the repository alongside the code.
 
 ## Contributing
 
-Contributions of any kind are welcome — bug reports, feature ideas, documentation fixes, new personas, test improvements, and code changes.
+Contributions of any kind are welcome: bug reports, feature ideas, documentation fixes, new personas, test improvements, and code changes.
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, quality checks, and ground rules
 - Use the [bug report template](https://github.com/pypi-ahmad/multi-agent-debate-decision-system/issues/new?template=bug_report.md) or [feature request template](https://github.com/pypi-ahmad/multi-agent-debate-decision-system/issues/new?template=feature_request.md)
@@ -221,7 +221,7 @@ make test     # pytest (coverage ≥ 80%)
 make audit    # pip-audit
 ```
 
-Add dependencies with `uv add`. Tests use fake chat clients — do not add live-LLM end-to-end tests. Coverage must stay at or above 80%.
+Add dependencies with `uv add`. Tests use fake chat clients. Do not add live-LLM end-to-end tests. Coverage must stay at or above 80%.
 
 CI runs on every push/PR to `main`: frozen `uv sync`, Ruff, ty, pytest, pip-audit, pre-commit hooks.
 

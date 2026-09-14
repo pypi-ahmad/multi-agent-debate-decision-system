@@ -10,6 +10,10 @@ from debate_decision_system.teams import current_seat, huddle_members, is_team
 
 
 def huddle_node(state: DebateState) -> dict:
+    """Speaks for exactly one huddle member per call, advancing huddle_index.
+    graph.py's advance() calls this repeatedly (one per rerun) until
+    huddle_done, the same one-step-per-turn pattern used for public speeches —
+    this is what lets the UI show huddle notes appearing one at a time."""
     seat = current_seat(state)
     if not is_team(seat):
         return {"huddle_done": True, "huddle_index": 0}

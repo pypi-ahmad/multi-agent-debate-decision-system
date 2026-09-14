@@ -9,7 +9,7 @@ Repository: <https://github.com/pypi-ahmad/multi-agent-debate-decision-system>
 - [uv](https://docs.astral.sh/uv/) 0.11 or later
 - Python 3.11, 3.12, or 3.13 (uv installs it automatically)
 - [Ollama](https://ollama.com/) for fully local models, or an API key for a hosted provider
-- Windows (native cmd/Explorer — not WSL or Docker) or native Linux
+- Windows (native cmd/Explorer, not WSL or Docker) or native Linux
 
 ## Launch for the first time
 
@@ -37,7 +37,7 @@ The launcher does the following on first run:
 Open [http://localhost:8522](http://localhost:8522) in your browser.
 
 > [!IMPORTANT]
-> Do not run inside WSL or Docker — the launchers target native environments only.
+> Do not run inside WSL or Docker. The launchers target native environments only.
 
 On subsequent runs the launcher skips setup steps that are already done and goes straight to launching Streamlit.
 
@@ -51,7 +51,7 @@ This route needs no API key.
 4. Pick the model from the dropdown (e.g. `llama3.1:8b`)
 5. Set seats to **2**, rounds to **1**, mode to **open**
 6. Type a decision question in the topic field
-7. Click **Start debate**, then **Step** to advance one turn at a time — or **Run** to run to completion
+7. Click **Start debate**, then **Step** to advance one turn at a time, or **Run** to run to completion
 
 > [!TIP]
 > If the model dropdown is empty, Ollama is not running or is unreachable at `OLLAMA_BASE_URL` (default `http://localhost:11434`). Start Ollama first.
@@ -98,7 +98,7 @@ The app has ten built-in personas. Without explicit selection, `assign_personas`
 | 9 | Risk-averse | minimizes downside and tail risk |
 | 10 | Creative | offers a third option the room did not name |
 
-In the **Debate** page, expand the **Seats** section. Each seat shows a persona dropdown — choose one from the list, or leave it for auto-assignment.
+In the **Debate** page, expand the **Seats** section. Each seat shows a persona dropdown: choose one from the list, or leave it for auto-assignment.
 
 Each seat can also override the default provider and model independently, so you can mix Ollama and hosted models in a single debate.
 
@@ -136,9 +136,9 @@ Speeches in grounded mode must include `[source: …]` citations. If a speech ha
 The **Knowledge** page manages a long-term vector library, separate from per-debate uploads.
 
 1. Open the **Knowledge** page
-2. Upload documents in the **Library** section — these are indexed into the `longterm` LanceDB collection and persist across debates
+2. Upload documents in the **Library** section. These are indexed into the `longterm` LanceDB collection and persist across debates
 3. Use **Search test** to verify a query returns relevant passages before starting a debate
-4. On the Debate page, enable **RAG** — the system retrieves from both the session collection (current debate uploads) and the longterm collection (library + past decisions)
+4. On the Debate page, enable **RAG**. The system retrieves from both the session collection (current debate uploads) and the longterm collection (library + past decisions)
 
 Past decided debates are automatically indexed into `longterm` when saved. Use **Pinned decisions** on the Debate page to include specific past decisions in every RAG query for the current debate.
 
@@ -148,7 +148,7 @@ You can pause the debate at any point and inject a message as a human participan
 
 1. During a debate, click **Pause**
 2. Type your message in the **Inject** field
-3. Click **Inject** — a `human` turn is appended to the transcript
+3. Click **Inject**: a `human` turn is appended to the transcript
 4. Click **Step** or **Run** to continue
 
 Injected human turns do not increment `speeches_done`, so they do not count toward the round quota.
@@ -169,7 +169,7 @@ Every debate is stored in `data/decisions.db` as full state JSON.
 
 1. Open **Decision history**
 2. Search or filter to find the debate (use the search box, outcome filter, status filter, or date range)
-3. Click **Continue debate** — the full `DebateState` is restored from `state_json`
+3. Click **Continue debate**: the full `DebateState` is restored from `state_json`
 4. Advance from where it left off
 
 Debates with status `in_progress` can always be continued. Decided debates can also be re-opened and extended.
@@ -197,7 +197,7 @@ Click **Edit** on any history record to add free-text tags, a category label, or
 
 ### Archiving
 
-Click **Archive** to hide a record from the default view (`archived = 1`). Archived debates are not deleted — use the **Archived** status filter to show them. Click **Unarchive** to restore.
+Click **Archive** to hide a record from the default view (`archived = 1`). Archived debates are not deleted. Use the **Archived** status filter to show them. Click **Unarchive** to restore.
 
 ### Linking
 
@@ -221,9 +221,9 @@ The **Analytics** page shows aggregate stats across all saved debates.
 | Metric | What it measures |
 | --- | --- |
 | Win rates | Which seats or personas win most often across `decided` debates |
-| Participation balance | `min / max` speech count per seat — 1.0 means all seats spoke equally |
-| Circular speech flags | Consecutive public speeches with Jaccard token overlap ≥ 0.55 — signals repetition |
+| Participation balance | `min / max` speech count per seat: 1.0 means all seats spoke equally |
+| Circular speech flags | Consecutive public speeches with Jaccard token overlap ≥ 0.55, which signals repetition |
 | Strength over time | Mean score (clarity + logic + evidence + persuasiveness ÷ 4) averaged by date |
 | Quality report | Per-debate: participation counts, circular flags, mean score axes, one-paragraph summary |
 
-**Simulation** (in the Analytics page) runs `run_until_done` — loops `advance` without pausing, useful for batch testing persona combinations.
+**Simulation** (in the Analytics page) runs `run_until_done`, which loops `advance` without pausing. Useful for batch testing persona combinations.

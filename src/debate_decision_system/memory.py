@@ -1,5 +1,13 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""SQLite decision memory. Full state is stored so a hearing can resume."""
+"""SQLite decision memory. Full state is stored so a hearing can resume.
+
+Each row keeps two things: individual columns (topic, recommendation, tags,
+...) used for search/filtering, and a `state_json` blob holding the complete
+DebateState verbatim, used only by load_debate() to resume a hearing. They
+are NOT kept in sync automatically — see update_decision_meta(). Next module:
+rag/pipeline.py, which indexes a decision's text into the vector store
+separately from this table.
+"""
 
 from __future__ import annotations
 
@@ -248,6 +256,9 @@ def update_decision_meta(
     tags: list[str] | None = None,
     category: str | None = None,
 ) -> None:
+    """Update only the notes/tags/category columns. This does not touch
+    state_json, so load_debate() on this debate_id still returns the state as
+    of the last save_debate() call, without these edits."""
     assignments: list[str] = []
     params: list[Any] = []
     if notes is not None:
@@ -310,6 +321,9 @@ def list_categories() -> list[str]:
 
 
 def link_decisions(left_id: str, right_id: str) -> None:
+    """Links are undirected. Sorting the pair before insert just avoids storing
+    both (A, B) and (B, A) as separate rows; related_ids() below still queries
+    both columns, so lookups don't depend on this ordering."""
     if left_id == right_id:
         return
     a, b = sorted((left_id, right_id))
@@ -395,6 +409,9 @@ def _migrate(conn: sqlite3.Connection) -> None:
 
 
 def _ensure_fts(conn: sqlite3.Connection) -> bool:
+    # FTS5 is a compile-time SQLite extension and isn't guaranteed present in
+    # every Python build; when CREATE VIRTUAL TABLE fails, every FTS-dependent
+    # query below degrades to the plain LIKE search in _like_search().
     try:
         conn.execute(
             """
@@ -425,6 +442,10 @@ def _fts_ready(conn: sqlite3.Connection) -> bool:
 
 
 def _rebuild_fts_if_stale(conn: sqlite3.Connection) -> None:
+    """Cheap staleness check: only compares row counts, not content. A matching
+    count is treated as "in sync" even if a row's text changed without the FTS
+    mirror being updated some other way; a full rebuild is the recovery path
+    whenever counts disagree (e.g. after a migration or manual DB edit)."""
     if not _fts_ready(conn):
         return
     stored = int(conn.execute("SELECT COUNT(*) FROM decisions_fts").fetchone()[0])
@@ -557,6 +578,11 @@ def _filters(  # noqa: PLR0913
 
 
 def _until_bound(until: str) -> str:
+    """`created_at < until_bound` is the actual filter (see _filters), so a
+    bare date is pushed to the start of the next day here — making a
+    caller-supplied "until 2026-03-05" inclusive of the 5th, not exclusive of
+    it. A value that already carries a time component is used as-is (exclusive
+    at that exact instant)."""
     raw = until.strip()
     if "T" in raw or " " in raw:
         return raw
@@ -570,6 +596,8 @@ def _until_bound(until: str) -> str:
 def _search_terms(query: str) -> list[str]:
     tokens = re.findall(r"[a-z0-9]+", query.lower())
     kept = [token for token in tokens if token not in _STOP and len(token) > 1]
+    # If stopword/length filtering removes everything (e.g. query == "the a"),
+    # search on the raw tokens instead of matching nothing.
     return kept or tokens
 
 

@@ -98,6 +98,9 @@ def judge_node(state: DebateState) -> dict:
         "recommendation": result.recommendation,
         "rationale": result.rationale,
         "scores": scores,
+        # JudgeOutput.outcome is a plain str field (not a Literal/enum), so the
+        # model can return anything; clamp to a known value here rather than
+        # trusting the field description alone.
         "outcome": result.outcome
         if result.outcome in {"clear_winner", "consensus", "split"}
         else "split",

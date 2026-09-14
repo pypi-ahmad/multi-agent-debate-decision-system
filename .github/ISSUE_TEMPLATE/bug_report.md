@@ -51,4 +51,4 @@ If the issue is visual, a screenshot helps a lot.
 Any other details — recent changes, fresh install vs. existing `.venv`, whether it happens every time.
 
 > [!NOTE]
-> Do not attach confidential documents or real API keys. You are fully responsible for any data you use with this app — see [DISCLAIMER.md](../../DISCLAIMER.md).
+> Do not attach confidential documents or real API keys. You are fully responsible for any data you use with this app. See [DISCLAIMER.md](../../DISCLAIMER.md).

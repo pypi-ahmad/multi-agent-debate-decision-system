@@ -21,6 +21,10 @@ from debate_decision_system.teams import current_seat, public_voice
 
 TOOL_NAMES = ("calculator", "code", "wikipedia", "web_search", "docs")
 GROUNDED_TOOLS = frozenset({"calculator", "code", "docs"})
+# calculator/run_code below deliberately do NOT use eval()/exec(): their input is
+# an LLM's tool-call argument (from plan_tools' structured output), so only a
+# fixed allowlist of AST node types, operators, and functions is walked by hand.
+# No imports, no attribute access, no arbitrary calls — anything else raises.
 _OPS: dict[type[ast.operator], Any] = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -110,6 +114,8 @@ def run_tool_calls(
     allowed = allowed_tools(str(state.get("grounding") or "open"))
     turns: list[dict[str, str]] = []
     errors: list[str] = []
+    # The 2-tool cap is enforced here too, not just in plan_tools' prompt —
+    # the planning LLM was only asked nicely, this is the actual guarantee.
     for call in calls[:2]:
         if call.name not in allowed:
             errors.append(f"tool:{call.name}: blocked in {state.get('grounding', 'open')} mode")
@@ -117,6 +123,8 @@ def run_tool_calls(
         try:
             result = execute_tool(call.name, call.input, state)
         except Exception as exc:  # noqa: BLE001
+            # A single tool failing (bad expression, network error, etc.) must not
+            # abort the debate turn: it becomes a visible transcript entry instead.
             result = f"error: {exc}"
             errors.append(f"tool:{call.name}: {exc}")
         turns.append(

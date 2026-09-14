@@ -23,6 +23,10 @@ def next_speaker_index(state: DebateState) -> int:
     if order == "reverse":
         return (n - 1 - (done % n)) % n
     if order == "random":
+        # hash() of a tuple containing strings is salted per-process (CPython
+        # hash randomization), so this is NOT reproducible across restarts even
+        # for the same topic/debaters — it only needs to be stable *within* one
+        # run, which it is (same inputs -> same hash for the life of the process).
         seed = hash((state.get("topic", ""), done, tuple(d["name"] for d in state["debaters"])))
         return seed % n
     return done % n

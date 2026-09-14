@@ -3,7 +3,7 @@
 **Project:** Multi-Agent Debate Decision System (`debate-decision-system` `0.3.0`)
 **Generated:** 2026-08-16 from files on disk
 **License:** MIT
-**Companion maps:** [ARCHITECTURE.md](ARCHITECTURE.md) (earlier checkout snapshot — some claims there are stale), [docs/technical.md](docs/technical.md) (current layer table)
+**Companion maps:** [ARCHITECTURE.md](ARCHITECTURE.md) (earlier checkout snapshot; some claims there are stale), [docs/technical.md](docs/technical.md) (current layer table)
 
 This blueprint is a consistency guide. Prefer this file plus the current source over older architecture notes when they disagree.
 
@@ -281,9 +281,9 @@ Graphify rebuild (2026-08-16): no import cycles detected.
 
 TypedDicts, not ORM entities:
 
-- `DebateState` — hearing document (topic, seats, transcript, verdict, RAG flags, documents).
-- `DebaterSpec` / `TeamMember` — seat vs huddle member.
-- `Turn` — roles: moderator, debater, judge, human, tool, huddle.
+- `DebateState`: hearing document (topic, seats, transcript, verdict, RAG flags, documents).
+- `DebaterSpec` / `TeamMember`: seat vs huddle member.
+- `Turn`, with roles moderator, debater, judge, human, tool, huddle.
 - `Document`, `Verdict`, `SpeechScore`.
 - Literals: `Provider`, `Phase`, `DebateMode`, `Grounding`, `Outcome`, `SpeakingOrder`.
 
@@ -545,37 +545,37 @@ def isolate_rag_store(tmp_path, monkeypatch) -> None:
 
 ## 15. Architectural decision records (inferred from code)
 
-### ADR-1 — Stepper over `graph.invoke`
+### ADR-1: Stepper over `graph.invoke`
 
 - **Context:** Streamlit needs per-step UI (inject, evidence, auto-run toggle).
 - **Decision:** Compile a LangGraph for structure; execute node functions via `advance()`.
 - **Consequences:** Fine-grained control. Risk of graph/stepper drift.
 
-### ADR-2 — Full state in SQLite
+### ADR-2: Full state in SQLite
 
 - **Context:** Continue / re-run / analytics need the whole hearing.
 - **Decision:** Store `state_json`, not only a verdict row.
 - **Consequences:** Simple resume. Schema evolution is additive JSON + optional columns.
 
-### ADR-3 — LanceDB beside SQLite
+### ADR-3: LanceDB beside SQLite
 
 - **Context:** Keyword `retrieve` is weak for long docs.
 - **Decision:** Local LanceDB + hybrid RRF; hashed embed when Ollama embed is absent.
 - **Consequences:** Offline RAG. Tests must isolate the store.
 
-### ADR-4 — Locked hosted models + live OS env
+### ADR-4: Locked hosted models + live OS env
 
 - **Context:** Avoid guessed slugs; this machine already has user env keys.
 - **Decision:** Official IDs (`gpt-5.6-luna` medium, `agnes-2.5-flash`, Gemini 3.5-lite / 3.7). Read keys at call time.
 - **Consequences:** Predictable dropdowns. New models need a code change.
 
-### ADR-5 — No first-party API / no Docker
+### ADR-5: No first-party API / no Docker
 
 - **Context:** Single-operator research tool.
 - **Decision:** Native `run.cmd` / `run.sh` + Streamlit only.
 - **Consequences:** Easy clone-and-run. Unsuitable as a multi-tenant service without a new architecture.
 
-### ADR-6 — Grounded vs open tools
+### ADR-6: Grounded vs open tools
 
 - **Context:** Some hearings must stay on uploaded docs.
 - **Decision:** `grounding` literal gates wikipedia/web.
@@ -597,7 +597,7 @@ def isolate_rag_store(tmp_path, monkeypatch) -> None:
 
 No import-linter / ArchUnit equivalent. Layer rules are social.
 
-Docs to keep aligned: this blueprint, `docs/technical.md`, README provider table. `ARCHITECTURE.md` is a dated snapshot — refresh or treat as historical.
+Docs to keep aligned: this blueprint, `docs/technical.md`, README provider table. `ARCHITECTURE.md` is a dated snapshot; refresh it or treat it as historical.
 
 ---
 

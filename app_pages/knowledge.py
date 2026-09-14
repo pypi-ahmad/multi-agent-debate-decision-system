@@ -16,6 +16,10 @@ KNOWLEDGE_DIR = PROJECT_ROOT / "data" / "knowledge"
 
 
 def _save_uploads(files: list[object]) -> list[dict[str, str]]:
+    """Persist uploads to disk under KNOWLEDGE_DIR before indexing them into the
+    "longterm" collection. This is the permanent-library counterpart to
+    debate.py's _read_uploads(), which keeps a debate's documents in-memory
+    only (session-scoped, never written to disk or the long-term collection)."""
     KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
     docs: list[dict[str, str]] = []
     for uploaded in files:

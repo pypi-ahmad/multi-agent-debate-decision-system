@@ -55,6 +55,7 @@ def options_node(state: DebateState) -> dict:
             ],
             "errors": [f"options: {exc}"],
         }
+    # MIN_DEBATERS (2) is reused here as "at least 2 options", not a debater count.
     if len(options) < MIN_DEBATERS:
         options = [f"Do it: {state['topic']}", f"Do not: {state['topic']}"]
     body = "\n".join(f"{i}. {opt}" for i, opt in enumerate(options, start=1))

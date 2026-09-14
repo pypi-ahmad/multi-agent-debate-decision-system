@@ -30,6 +30,10 @@ def huddle_members(seat: DebaterSpec) -> list[TeamMember]:
 
 
 def leader_member(seat: DebaterSpec) -> TeamMember:
+    """Prefer the explicit is_leader flag; fall back to the first member, then
+    to a synthetic leader built from the seat itself. The fallbacks exist
+    because a team seat can be constructed (e.g. from a template, or by
+    graph.py's _normalize_seat) without any member ever marked as leader."""
     members = list(seat.get("members") or [])
     for member in members:
         if member.get("is_leader"):
@@ -50,6 +54,9 @@ def leader_member(seat: DebaterSpec) -> TeamMember:
 
 
 def public_voice(seat: DebaterSpec) -> DebaterSpec:
+    """What the transcript/UI shows for this seat. For a team, only the leader's
+    persona ever speaks on the public floor — other members are heard only in
+    huddle.py's private notes and are never named individually in the debate."""
     if not is_team(seat):
         return seat
     lead = leader_member(seat)

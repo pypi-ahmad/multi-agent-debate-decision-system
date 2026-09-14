@@ -4,7 +4,7 @@ Thank you for helping keep this project safe. Reports from the community are wel
 
 ## This is a local app
 
-The Streamlit UI, SQLite file (`data/decisions.db`), and LanceDB store (`data/lancedb/`) run on **your** machine. There is no hosted multi-user service and no project-operated API. You supply every credential (OS environment or `.env`). Anything you upload or debate is **your** responsibility — see [DISCLAIMER.md](DISCLAIMER.md).
+The Streamlit UI, SQLite file (`data/decisions.db`), and LanceDB store (`data/lancedb/`) run on **your** machine. There is no hosted multi-user service and no project-operated API. You supply every credential (OS environment or `.env`). Anything you upload or debate is **your** responsibility; see [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Supported versions
 
@@ -19,7 +19,7 @@ Please report privately:
 - Path traversal or unexpected file reads on upload / zip extract
 - Prompt or tool behavior that can exfiltrate local files without the user asking
 
-Do **not** report: model quality, “the judge was wrong,” or missing features. Use a [bug](.github/ISSUE_TEMPLATE/bug_report.md) or [feature](.github/ISSUE_TEMPLATE/feature_request.md) issue for those.
+Do **not** report: model quality, "the judge was wrong," or missing features. Use a [bug](.github/ISSUE_TEMPLATE/bug_report.md) or [feature](.github/ISSUE_TEMPLATE/feature_request.md) issue for those.
 
 Do **not** open a public issue that includes live API keys or confidential documents.
 
