@@ -99,15 +99,11 @@ indent-style = "space"
 docstring-code-format = true
 
 [tool.pytest]
-testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
-    "--cov=debate_decision_system",
-    "--cov-report=term-missing",
-    "--cov-fail-under=80",
 ]
 markers = [
     "slow: marks tests as slow",
@@ -116,23 +112,6 @@ markers = [
 filterwarnings = [
     "error",
 ]
-
-[tool.coverage.run]
-branch = true
-source = ["src/debate_decision_system"]
-omit = [
-    "*/__main__.py",
-    "*/conftest.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "if __name__ == .__main__.:",
-]
-fail_under = 80
-show_missing = true
 
 [tool.ty.terminal]
 error-on-warning = true

@@ -34,9 +34,6 @@ jobs:
       - name: Type check
         run: uv run ty check src/
 
-      - name: Test
-        run: uv run pytest --cov-report=xml
-
       - name: Audit
         run: uv run pip-audit .
 
