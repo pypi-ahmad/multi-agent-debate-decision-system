@@ -1,5 +1,17 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""LangGraph wiring: moderator <-> debater, then judge."""
+"""LangGraph wiring: moderator <-> debater, then judge.
+
+`debate_graph` below is a real compiled LangGraph, but it is not the live
+execution path: the UI (app_pages/debate.py) never calls `debate_graph.invoke`.
+Instead it calls `advance()`, which re-implements the same routing decisions
+via `next_action()` and runs exactly one node per call. That is what lets the
+UI pause after any turn, inject a human note, or step one node at a time —
+none of which a single `.invoke()` call supports. `route_start` /
+`route_after_moderator` are the compiled graph's conditional-edge functions;
+`next_action` is the equivalent decision for the manual path. The two are
+written independently and can drift — see agents/__init__.py for the node
+contract they both dispatch to.
+"""
 
 from __future__ import annotations
 
@@ -198,6 +210,11 @@ def _normalize_seat(
 
 
 def apply_update(state: DebateState, update: dict[str, Any]) -> DebateState:
+    """Merge a node's return dict into state. "transcript" and "errors" are
+    concatenated (mirroring the `Annotated[..., operator.add]` reducers in
+    state.py); every other key is overwritten. This is only needed because the
+    manual advance() path bypasses the compiled graph, which would apply those
+    reducers on its own."""
     merged: dict[str, Any] = dict(state)
     for key, value in update.items():
         if key in {"transcript", "errors"}:
@@ -216,6 +233,11 @@ def debate_done(state: DebateState) -> bool:
 
 
 def next_action(state: DebateState) -> str:  # noqa: PLR0911
+    """Infer the next node purely from `phase` plus the shape of the last
+    transcript turn — there is no explicit "next node" field in state. Order:
+    structured-mode intro (options -> pros_cons) once per debate, then a
+    moderator -> tools -> [huddle] -> debater -> moderator loop until
+    should_judge(), then judge."""
     if debate_done(state):
         return "end"
     phase = state.get("phase")
@@ -235,6 +257,9 @@ def next_action(state: DebateState) -> str:  # noqa: PLR0911
             return "huddle"
         return "debater"
     if turns[-1]["role"] == "moderator":
+        # structure.py's options/pros_cons nodes also post role="moderator" but
+        # name="Analyst"; a real moderator_node turn is named "Moderator". Only
+        # the latter should trigger tool planning for the upcoming speech.
         if turns[-1]["name"] == "Analyst":
             return "moderator"
         return "tools"

@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
+# Assumes this file stays at src/debate_decision_system/config.py; parents[2] is the repo root.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 # OS / user env wins. .env fills only missing keys (for other machines).
 load_dotenv(PROJECT_ROOT / ".env", override=False)
@@ -129,6 +130,8 @@ def list_ollama_models(base_url: str | None = None) -> list[str]:
         with urllib.request.urlopen(url, timeout=2) as response:  # noqa: S310
             payload = json.loads(response.read().decode())
     except (OSError, urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError):
+        # Ollama not running/reachable is the expected case for OpenAI/Agnes/Google
+        # users, not an error to surface — callers just see an empty model list.
         return []
     names: list[str] = []
     seen: set[str] = set()

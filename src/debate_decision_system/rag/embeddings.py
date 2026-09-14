@@ -16,6 +16,14 @@ HASH_DIM = 256
 
 
 class _EmbedState:
+    """Process-wide latch, not a real instance: once an Ollama embed call fails,
+    every later embed_text() call for the rest of this process falls back to
+    the hashed embedding without retrying Ollama. Consequence: since
+    vectorstore.py keys tables by vector dimension, chunks embedded before the
+    flip live in a different-dimension table than chunks embedded after —
+    dense search over the "before" table effectively goes stale until Ollama
+    comes back and the process is restarted."""
+
     ollama_dead = False
 
 

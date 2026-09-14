@@ -10,7 +10,7 @@ from pathlib import Path
 from debate_decision_system.state import Document
 
 _TEXT_SUFFIXES = {".txt", ".md", ".csv", ".json", ".py", ".toml", ".yml", ".yaml", ".rst"}
-_MAX_CHARS = 20_000
+_MAX_CHARS = 20_000  # per-document truncation; the tail beyond this is silently dropped
 
 
 def load_upload(name: str, data: bytes) -> list[Document]:
@@ -35,6 +35,8 @@ def _from_zip(data: bytes) -> list[Document]:
     docs: list[Document] = []
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         for info in archive.infolist():
+            # Both caps below are silent: entries past 20, or with an unlisted
+            # suffix, are skipped with no warning surfaced to the uploader.
             if info.is_dir() or len(docs) >= 20:  # noqa: PLR2004
                 continue
             suffix = Path(info.filename).suffix.lower()

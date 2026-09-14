@@ -94,6 +94,10 @@ if st.button("Run simulation", type="primary", icon=":material/science:"):
     if not models:
         st.error("Pick at least one model.", icon=":material/error:")
     else:
+        # run_until_done() below executes synchronously, inside this single
+        # script run, making real provider calls for every model x run
+        # combination — a large selection can block this page for a while;
+        # st.status is the only progress feedback during that time.
         batch = uuid.uuid4().hex[:8]
         outcomes: list[str] = []
         with st.status("Simulation running", expanded=True) as status:

@@ -1,5 +1,11 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""Multi-stage RAG: rewrite → hybrid → rerank → compress → cite. Index helpers."""
+"""Multi-stage RAG: rewrite → hybrid → rerank → compress → cite. Index helpers.
+
+Designed to work fully offline: query rewriting is rule-based (retriever.py),
+embeddings fall back to a hashed vector when Ollama is unreachable
+(embeddings.py), and `rank_fn` (LLM reranking) is optional. Next module for
+storage: vectorstore.py, which content_hash below makes idempotent to re-index.
+"""
 
 from __future__ import annotations
 
@@ -50,6 +56,8 @@ def citation_for(chunk: Chunk) -> str:
 
 
 def _hash_text(text: str) -> str:
+    """Content hash consumed by vectorstore.upsert_chunks() to skip re-embedding
+    and re-writing a chunk whose text hasn't changed since the last index run."""
     return hashlib.blake2b(text.encode("utf-8"), digest_size=16).hexdigest()
 
 
@@ -62,6 +70,9 @@ def _split_chunks(text: str) -> list[str]:
     while start < len(clean):
         end = min(len(clean), start + CHUNK_SIZE)
         if end < len(clean):
+            # Prefer cutting at a newline in the back half of the window over a
+            # hard cut at exactly CHUNK_SIZE, so a chunk boundary lands between
+            # paragraphs/lines when one is nearby.
             cut = clean.rfind("\n", start + CHUNK_SIZE // 2, end)
             if cut > start:
                 end = cut
@@ -143,6 +154,9 @@ def index_decision(state: DebateState) -> IndexReport:
         "Risks: " + "; ".join(verdict.get("key_risks") or []),
     ]
     tags = ""
+    # Each part is "Label: value"; when value is empty the string ends with
+    # ": ", which is how empty fields are dropped instead of indexing e.g. a
+    # bare "Recommendation: " line.
     text = "\n".join(part for part in parts if not part.endswith(": "))
     rows = _chunk_rows(
         source_type="decision",
@@ -204,6 +218,9 @@ def run_rag(  # noqa: PLR0913
         since=since,
     )
     if pinned_ids:
+        # Pinned decisions are prepended into the candidate pool, not forced
+        # into the final result — rerank() below can still drop them if they
+        # don't score well against the query.
         for pin in pinned_ids:
             extra = hybrid_search(rewritten or query, limit=4, decision_id=pin)
             fused = extra + fused
@@ -222,6 +239,9 @@ def run_rag(  # noqa: PLR0913
 
 
 def _multihop(query: str, seed: list[Chunk], *, hops: int, limit: int) -> list[Chunk]:
+    """Walk memory.py's decision_links graph outward from the seed hits'
+    decisions, pulling in chunks from linked past decisions even if they don't
+    directly match the query. `hops` bounds how many link-jumps to follow."""
     from debate_decision_system.memory import related_ids  # noqa: PLC0415
 
     seen = {chunk.id for chunk in seed}

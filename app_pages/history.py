@@ -38,12 +38,16 @@ tag = st.selectbox("Tag", ["any", *known_tags], key="hist_tag")
 known_cats = list_categories()
 category = st.selectbox("Category", ["any", *known_cats], key="hist_category")
 
+# st.date_input with a range can return (), a single date, or a 2-tuple
+# depending on how many endpoints the user has picked so far — handle all three.
 dates = (
     [item.isoformat() for item in span if item]
     if isinstance(span, tuple)
     else ([span.isoformat()] if span else [])
 )
 since = dates[0] if dates else ""
+# `until` is a bare date string; memory.py's _until_bound() treats it as
+# inclusive of that whole day, not an exclusive instant at midnight.
 until = dates[1] if len(dates) > 1 else ""
 
 status_value = "" if status == "any" else str(status)
@@ -139,6 +143,9 @@ if others:
         st.rerun()
 
 with st.container(horizontal=True):
+    # Manually mirrors debate.py's _sync()/session_state keys rather than
+    # importing it (a private helper of that page) — keep these keys in sync
+    # with debate.py if that page's session_state contract changes.
     if st.button("Continue debate", type="primary", icon=":material/play_arrow:"):
         st.session_state.debate = state
         st.session_state.transcript = list(state.get("transcript") or [])

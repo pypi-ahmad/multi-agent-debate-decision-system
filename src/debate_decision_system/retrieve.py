@@ -1,5 +1,12 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""Retrieval facade: keyword fallback plus advanced RAG."""
+"""Retrieval facade: keyword fallback plus advanced RAG.
+
+Two retrieval systems coexist. `knowledge_block()` picks between them per
+state["rag_enabled"]: the LanceDB pipeline (rag/pipeline.py, next module to
+open) when RAG is on, or the plain keyword `retrieve()` below when it is off.
+`retrieve()` also has a second, unconditional caller: tools.py's "docs" tool
+calls it directly regardless of the RAG toggle.
+"""
 
 from __future__ import annotations
 

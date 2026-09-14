@@ -1,5 +1,13 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""LangGraph state for one debate run."""
+"""LangGraph state for one debate run.
+
+This module only defines shapes; it must not import graph.py or any agent
+module (everything else imports this one). See graph.py next: `apply_update`
+there re-implements the `operator.add` append behavior declared below by
+hand, because the live UI path advances node-by-node instead of going
+through the compiled LangGraph runtime that would apply these reducers
+automatically.
+"""
 
 from __future__ import annotations
 
@@ -30,6 +38,9 @@ class TeamMember(TypedDict, total=False):
 
 
 class DebaterSpec(TypedDict, total=False):
+    """One seat at the table. `members` is only populated when kind == "team";
+    a solo "agent" seat speaks for itself and never has a huddle."""
+
     name: str
     style: str
     instructions: str
@@ -91,6 +102,8 @@ class DebateState(TypedDict, total=False):
     documents: list[Document]
     rag_enabled: bool
     pinned_ids: list[str]
+    # Append-only via operator.add. graph.py's apply_update() concatenates these
+    # two keys manually for the same reason; keep both in sync if this changes.
     transcript: Annotated[list[Turn], operator.add]
     verdict: Verdict
     errors: Annotated[list[str], operator.add]

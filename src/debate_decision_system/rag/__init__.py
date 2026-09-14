@@ -1,5 +1,9 @@
 # Copyright (c) 2026 Ahmad Mujtaba
-"""Advanced RAG: hybrid retrieve, rerank, citations."""
+"""Advanced RAG: hybrid retrieve, rerank, citations.
+
+Read pipeline.py first — it's the orchestrator that calls embeddings.py,
+retriever.py (hybrid search), reranker.py, and vectorstore.py in sequence.
+"""
 
 from __future__ import annotations
 

@@ -39,6 +39,12 @@ def _now() -> str:
 
 
 def _esc(value: str) -> str:
+    """Escape a value for splicing into a LanceDB `.delete()` predicate string
+    (LanceDB takes a SQL-like filter expression, not parameterized values).
+    Only single quotes are escaped. `id`/`source_type`/`source_id` values built
+    from an uploaded document's filename (see rag/pipeline.py's source_id=name)
+    flow into this unescaped-otherwise, so an unusual filename could still
+    produce a malformed or unintended predicate."""
     return value.replace("'", "''")
 
 
