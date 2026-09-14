@@ -1,10 +1,10 @@
-# Modernization plan — debate-decision-system
+# Modernization plan: debate-decision-system
 
 Cites [`ARCHITECTURE.md`](ARCHITECTURE.md). Forward-looking only.
 
 ## 1. Executive summary
 
-This checkout is **already on the target stack** (Python ≥3.11, uv lockfile, `uv_build`, Ruff, ty, pytest 80%, pip-audit, prek, SHA-pinned CI). Do **not** rewrite Streamlit, LangGraph, or SQLite. Plan is **leave-in-place** plus small lit-regime hardening: close coverage holes, keep `history.py` as a shim, freeze seam tests, confirm CI is *enforced*. Scope: XS–S. A multi-phase stack rewrite is over-engineering.
+This checkout is already on the target stack (Python ≥3.11, uv lockfile, `uv_build`, Ruff, ty, pytest 80%, pip-audit, prek, SHA-pinned CI). Do **not** rewrite Streamlit, LangGraph, or SQLite. Plan is **leave-in-place** plus small lit-regime hardening: close coverage holes, keep `history.py` as a shim, freeze seam tests, confirm CI is *enforced*. Scope: XS–S. A multi-phase stack rewrite is over-engineering.
 
 ## 2. Current state assessment
 
@@ -40,7 +40,7 @@ From [`ARCHITECTURE.md`](ARCHITECTURE.md) Part 1.
 | SQLite memory | A | Already crossed (`tests/test_memory.py`) | lit | L3 | FTS/migrate paths partly covered |
 | Compiled `debate_graph` | Leave / optional delete later | n/a | — | — | Drift vs `advance()` |
 
-**CI Milestone:** **already stood up** in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (treat as Phase 0, complete). **Enforcing** required checks is a **human** GitHub Settings step. Agent cannot do it.
+**CI Milestone:** already stood up in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (treat as Phase 0, complete). Enforcing required checks is a human GitHub Settings step; the agent cannot do it.
 
 **Oracle:** source-as-spec + existing pytest. Self-frozen goldens only if a later phase adds `advance()` transcript snapshots. No production oracle on disk.
 
@@ -48,7 +48,7 @@ From [`ARCHITECTURE.md`](ARCHITECTURE.md) Part 1.
 
 ## 4. Target architecture
 
-**Keep the modular local monolith.** Same languages, same Streamlit, same SQLite.
+Keep the modular local monolith: same languages, same Streamlit, same SQLite.
 
 | Piece | Action |
 | --- | --- |
@@ -66,21 +66,21 @@ From [`ARCHITECTURE.md`](ARCHITECTURE.md) Part 1.
 
 - **Context:** Skill asked for a modernization target. Stack is already modern-python.
 - **Decision:** Upgrade-in-place = no-op. Leave-in-place.
-- **Alternatives:** Rewrite UI (React) — no capability gap. Swap LangGraph — stepper already custom. Postgres — one-user local file is enough.
+- **Alternatives:** Rewrite UI (React): no capability gap. Swap LangGraph: stepper already custom. Postgres: one-user local file is enough.
 - **Consequences:** Residual L3/L1 gaps stay until Phase 1–2 tests. No new deps.
 
 ### ADR: `advance()` is the contract
 
 - **Context:** Two control planes (`StateGraph` vs `advance`).
 - **Decision:** Seam tests pin `advance()` + `next_action`, not `debate_graph.invoke`.
-- **Alternatives:** Switch UI to compiled graph — loses pause/inject.
+- **Alternatives:** Switch UI to compiled graph: loses pause/inject.
 - **Consequences:** `debate_graph` may rot. Phase 2 may delete it.
 
 ### ADR: No Streamlit e2e in this plan
 
 - **Context:** Session rule + flake cost.
 - **Decision:** Drop UI e2e. Package tests only.
-- **Alternatives:** Playwright — deferred, not scheduled.
+- **Alternatives:** Playwright: deferred, not scheduled.
 - **Consequences:** UI stays L1.
 
 ## 5. Per-feature migration analysis
@@ -98,14 +98,14 @@ All **Strategy A / Leave in place**. No beachhead rewrite.
 
 ## 6. Phased implementation plan
 
-**Gating:** All scheduled phases are **lit** (package). Exit = runnable inventory commands. Do not advance without recording results. Trunk = **`main`**. No `master`. No stacked PRs.
+**Gating:** All scheduled phases are lit (package). Exit = runnable inventory commands. Do not advance without recording results. Trunk = `main`. No `master`. No stacked PRs.
 
-**Phase 0 (CI + baseline): already complete** — workflow exists; this session: ruff, ty, pytest 33, audit clean.
+**Phase 0 (CI + baseline): already complete.** Workflow exists; this session: ruff, ty, pytest 33, audit clean.
 
 ### Phase 1: Safety net teeth (T-shirt: S)
 
 **Goal:** Prove the existing net fails when `advance()` / memory contracts break.
-**Regime:** lit — package
+**Regime:** lit (package)
 **Safety rung:** L3 (still no UI e2e)
 **Prerequisites:** none
 **Duration:** 1 short PR
@@ -128,14 +128,14 @@ All **Strategy A / Leave in place**. No beachhead rewrite.
 
 #### Hazards (Phase 2.5)
 
-- H1 cleared — no dependency removal
-- H2 cleared — no major bump
-- H3 cleared — no runtime bump
-- H4 cleared — no edge/auth
-- H5 cleared — no store major
-- H6 cleared — no insecure shim
-- H7 — branch from `main`, merge before Phase 2
-- H8 — if test command changes, update README + this file in same PR
+- H1 cleared: no dependency removal
+- H2 cleared: no major bump
+- H3 cleared: no runtime bump
+- H4 cleared: no edge/auth
+- H5 cleared: no store major
+- H6 cleared: no insecure shim
+- H7: branch from `main`, merge before Phase 2
+- H8: if test command changes, update README + this file in same PR
 
 #### Verification & Exit Criteria
 
@@ -143,7 +143,7 @@ All **Strategy A / Leave in place**. No beachhead rewrite.
 - [ ] `uv run ruff check` and `uv run ty check src/` green
 - [ ] Net-proven-to-fail recorded (1.2) then reverted
 - [ ] No behavior change outside tests
-- [ ] Residual: UI still L1 — closed never in this plan (dropped)
+- [ ] Residual: UI still L1, not closed in this plan (dropped)
 
 ### Phase 2: Coverage holes only (T-shirt: S)
 
@@ -167,7 +167,7 @@ All **Strategy A / Leave in place**. No beachhead rewrite.
 
 #### Hazards
 
-- H1 if 2.2 deletes symbol — grep all imports first
+- H1 if 2.2 deletes symbol: grep all imports first
 - H2–H6 cleared (no majors / auth / store / shims)
 - H7 merge Phase 1 first
 - H8 update architecture + README topology if graph helper removed
@@ -205,7 +205,7 @@ All **Strategy A / Leave in place**. No beachhead rewrite.
 
 ## 7. Execution governance
 
-- Branch `phase-1-advance-golden` then `phase-2-coverage` from **`main`**. Merge each before the next. `git log origin/main..HEAD` empty at cut.
+- Branch `phase-1-advance-golden` then `phase-2-coverage` from `main`. Merge each before the next. `git log origin/main..HEAD` empty at cut.
 - Lit exit = `make lint` + `uv run pytest`.
 - Living plan: mark ✅ / ⏭️ / 🗑️ here when a phase ends.
 - Topology change → update `ARCHITECTURE.md`, `README.md`, `.github/copilot-instructions.modernization.md` in the **same PR** (H8).
@@ -225,7 +225,7 @@ All **Strategy A / Leave in place**. No beachhead rewrite.
 
 ## 9. Open questions / stakeholder actions
 
-1. **[DECISION NEEDED — human]** Enable branch protection / required status checks for `quality` and `hooks` on `main`.
+1. **[DECISION NEEDED: human]** Enable branch protection / required status checks for `quality` and `hooks` on `main`.
 2. Confirm Streamlit stay-unlaunched for agents (already in `AGENTS.md`).
 3. Product direction (auth, hosted API, vectors): **out of scope** until you say otherwise.
 
