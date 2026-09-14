@@ -35,7 +35,7 @@ Homepage = "https://github.com/pypi-ahmad/multi-agent-debate-decision-system"
 Repository = "https://github.com/pypi-ahmad/multi-agent-debate-decision-system"
 
 [build-system]
-requires = ["uv_build>=0.11.29,<0.12.0"]
+requires = ["uv_build>=0.11.29,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
